@@ -378,6 +378,8 @@ export default function Home() {
           --accent: #5ec8f2;
           --accent-strong: #38b6f0;
           --accent-ink: #04283d;
+          --accent-2: #f2b134;
+          --accent-2-strong: #d99a1f;
           --text: #eef3fa;
           --text-muted: #8ea3c4;
         }
@@ -475,15 +477,15 @@ export default function Home() {
         th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
         tbody tr { background: #e7edf5; }
         tbody tr:nth-child(even) { background: #d3dceb; }
-        tbody tr:hover { background: #bcd2ec; }
+        tbody tr:hover { background: #fbead0; }
         tbody td { color: #0b1a33; }
         tbody td a { color: #175a8c; font-weight: 600; }
-        tbody td a:hover { color: #0b3d61; }
+        tbody td a:hover { color: var(--accent-2-strong); }
         .link-btn { border: none; background: none; color: #175a8c; font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; }
-        .link-btn:hover { color: #0b3d61; }
+        .link-btn:hover { color: var(--accent-2-strong); }
         .archivo-cell { text-align: center; }
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
-        .eye-link:hover { color: #0b3d61; }
+        .eye-link:hover { color: var(--accent-2-strong); }
         tr:last-child td { border-bottom: none; }
         .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
@@ -508,7 +510,7 @@ function Stat({ label, value }) {
         padding: "14px 16px",
       }}
     >
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#0b7bb8" }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#b45309" }}>{value}</div>
       <div style={{ fontSize: 12, color: "#3a5570" }}>{label}</div>
     </div>
   );
