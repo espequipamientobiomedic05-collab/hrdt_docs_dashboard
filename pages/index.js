@@ -202,7 +202,7 @@ export default function Home() {
         <header className="header">
           <div>
             <h1>Dashboard Documental HRDT</h1>
-            {data && <p className="muted">Actualizado: {data.generatedAt}</p>}
+            {data && <p className="muted-onlight">Actualizado: {data.generatedAt}</p>}
           </div>
           <div className="actions">
             <a className="ghost-btn" href={data?.sheetUrl} target="_blank" rel="noreferrer">
@@ -336,7 +336,7 @@ export default function Home() {
                   </tbody>
                 </table>
                 {filteredItems.length === 0 && (
-                  <p className="muted" style={{ padding: "12px 4px" }}>
+                  <p className="muted-onlight" style={{ padding: "12px 4px" }}>
                     No hay documentos que coincidan con el filtro.
                   </p>
                 )}
@@ -345,7 +345,7 @@ export default function Home() {
           </>
         )}
 
-        {loading && !data && <p className="muted">Cargando dashboard…</p>}
+        {loading && !data && <p className="muted-onlight">Cargando dashboard…</p>}
 
         {annexModal && (
           <div className="modal-backdrop" onClick={() => setAnnexModal(null)}>
@@ -392,10 +392,18 @@ export default function Home() {
         }
       `}</style>
       <style jsx>{`
-        .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+        .wrap {
+          max-width: 1100px;
+          margin: 32px auto 60px;
+          padding: 32px 32px 48px;
+          background: #f5f7fa;
+          border-radius: 20px;
+          box-shadow: 0 24px 60px rgba(2, 10, 24, 0.35);
+        }
         .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
-        h1 { margin: 0; font-size: 24px; color: var(--text); letter-spacing: 0.2px; }
+        h1 { margin: 0; font-size: 24px; color: #10233d; letter-spacing: 0.2px; }
         .muted { color: var(--text-muted); font-size: 13px; }
+        .muted-onlight { color: #55708c; font-size: 13px; }
         .actions { display: flex; gap: 8px; }
         .ghost-btn {
           border: 1px solid var(--accent);
