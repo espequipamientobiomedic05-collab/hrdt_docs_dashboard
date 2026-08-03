@@ -13,7 +13,7 @@ const TABS = [
     key: "avances",
     label: "Informes avances",
     source: "Revisión avances",
-    filters: [{ key: "cutoffDate", label: "Fecha corte talleres" }],
+    filters: [{ key: "cutoffDate", label: "Fecha corte talleres", type: "date" }],
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha corte talleres", render: (item) => item.cutoffDate },
@@ -35,7 +35,7 @@ const TABS = [
     key: "ruha",
     label: "Informes semanales RUHA",
     source: "Informes semanales RUHA",
-    filters: [{ key: "cutoffDate", label: "Fecha de corte" }],
+    filters: [{ key: "cutoffDate", label: "Fecha de corte", type: "date" }],
     columns: [
       { header: "Corte", render: (item) => item.cutoffDate },
       { header: "Fecha emisión", render: (item) => item.date },
@@ -46,7 +46,7 @@ const TABS = [
     key: "reuniones",
     label: "Reuniones supervisión",
     source: "Reuniones_supervisión",
-    filters: [{ key: "date", label: "Fecha" }],
+    filters: [{ key: "date", label: "Fecha", type: "date" }],
     columns: [
       { header: "Fecha", render: (item) => item.date },
       { header: "Acta", render: (item) => item.code },
@@ -63,8 +63,8 @@ const TABS = [
     label: "Cartas",
     source: "CARTAS",
     filters: [
-      { key: "code", label: "Nro Avance" },
-      { key: "date", label: "Fecha" },
+      { key: "code", label: "Nro Avance", type: "select" },
+      { key: "date", label: "Fecha", type: "date" },
     ],
     columns: [
       { header: "Fecha", render: (item) => item.date },
@@ -73,6 +73,15 @@ const TABS = [
     ],
   },
 ];
+
+// Convierte "31/07/2026" (formato de Google Sheets) a "2026-07-31" (formato
+// de <input type="date">) para poder comparar rangos.
+function toIsoDate(value) {
+  const match = String(value || "").match(/^([0-3]?\d)\/([01]?\d)\/(\d{4})$/);
+  if (!match) return "";
+  const [, d, m, y] = match;
+  return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
 
 function EyeIcon() {
   return (
@@ -95,6 +104,7 @@ export default function Home() {
   const [tab, setTab] = useState("avances");
   const [query, setQuery] = useState("");
   const [filterValues, setFilterValues] = useState({});
+  const [dateRanges, setDateRanges] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
 
   useEffect(() => {
@@ -103,6 +113,7 @@ export default function Home() {
 
   useEffect(() => {
     setFilterValues({});
+    setDateRanges({});
   }, [tab]);
 
   async function loadDashboard() {
@@ -142,6 +153,7 @@ export default function Home() {
   const filterOptions = useMemo(() => {
     const options = {};
     (activeTab.filters || []).forEach((f) => {
+      if (f.type !== "select") return;
       const values = sourceItems
         .map((item) => item[f.key])
         .filter((v) => v !== undefined && v !== null && v !== "");
@@ -157,12 +169,21 @@ export default function Home() {
     return sourceItems.filter((item) => {
       const matchesQuery = !q || (item.searchText || "").includes(q);
       const matchesFilters = (activeTab.filters || []).every((f) => {
+        if (f.type === "date") {
+          const range = dateRanges[f.key] || {};
+          if (!range.from && !range.to) return true;
+          const iso = toIsoDate(item[f.key]);
+          if (!iso) return false;
+          if (range.from && iso < range.from) return false;
+          if (range.to && iso > range.to) return false;
+          return true;
+        }
         const selected = filterValues[f.key];
         return !selected || selected === "todas" || String(item[f.key]) === selected;
       });
       return matchesQuery && matchesFilters;
     });
-  }, [sourceItems, query, filterValues, activeTab]);
+  }, [sourceItems, query, filterValues, dateRanges, activeTab]);
 
   return (
     <>
@@ -214,22 +235,61 @@ export default function Home() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
-                {(activeTab.filters || []).map((f) => (
-                  <select
-                    key={f.key}
-                    value={filterValues[f.key] || "todas"}
-                    onChange={(e) =>
-                      setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))
-                    }
-                  >
-                    <option value="todas">{f.label}: todas</option>
-                    {(filterOptions[f.key] || []).map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                ))}
+                {(activeTab.filters || []).map((f) =>
+                  f.type === "date" ? (
+                    <div className="date-range" key={f.key}>
+                      <span className="date-range-label">{f.label}</span>
+                      <input
+                        type="date"
+                        value={(dateRanges[f.key] && dateRanges[f.key].from) || ""}
+                        onChange={(e) =>
+                          setDateRanges((prev) => ({
+                            ...prev,
+                            [f.key]: { ...prev[f.key], from: e.target.value },
+                          }))
+                        }
+                      />
+                      <span className="date-range-sep">→</span>
+                      <input
+                        type="date"
+                        value={(dateRanges[f.key] && dateRanges[f.key].to) || ""}
+                        onChange={(e) =>
+                          setDateRanges((prev) => ({
+                            ...prev,
+                            [f.key]: { ...prev[f.key], to: e.target.value },
+                          }))
+                        }
+                      />
+                      {(dateRanges[f.key]?.from || dateRanges[f.key]?.to) && (
+                        <button
+                          type="button"
+                          className="date-range-clear"
+                          onClick={() =>
+                            setDateRanges((prev) => ({ ...prev, [f.key]: { from: "", to: "" } }))
+                          }
+                          title="Limpiar fechas"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <select
+                      key={f.key}
+                      value={filterValues[f.key] || "todas"}
+                      onChange={(e) =>
+                        setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))
+                      }
+                    >
+                      <option value="todas">{f.label}: todas</option>
+                      {(filterOptions[f.key] || []).map((value) => (
+                        <option key={value} value={value}>
+                          {value}
+                        </option>
+                      ))}
+                    </select>
+                  )
+                )}
               </div>
               <div className="table-wrap">
                 <table>
@@ -367,6 +427,21 @@ export default function Home() {
         }
         .filters input::placeholder { color: var(--text-muted); }
         .filters select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+        .date-range {
+          display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+          border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+        }
+        .date-range-label { font-size: 12px; color: var(--text-muted); margin-right: 4px; white-space: nowrap; }
+        .date-range input[type="date"] {
+          background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+          border-radius: 6px; padding: 5px 6px; font-size: 13px; color-scheme: dark;
+        }
+        .date-range-sep { color: var(--text-muted); font-size: 12px; }
+        .date-range-clear {
+          border: none; background: none; color: var(--text-muted); cursor: pointer;
+          font-size: 13px; padding: 0 2px;
+        }
+        .date-range-clear:hover { color: var(--accent); }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
         .card {
           background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
