@@ -14,24 +14,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = new URLSearchParams();
-    body.set("action", "dashboard");
-    body.set("secret", secret);
+    const url = new URL(scriptUrl);
+    url.searchParams.set("action", "dashboard");
+    url.searchParams.set("secret", secret);
 
-    const response = await fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString(),
-      // Apps Script suele responder con un 302 antes del contenido final;
-      // fetch en Node sigue redirecciones automáticamente.
-    });
-
+    const response = await fetch(url.toString(), { method: "GET" });
     const data = await response.json();
 
-    // Cacheamos un poco en el borde de Vercel para no saturar Apps Script
-    // si varias personas abren el dashboard al mismo tiempo.
     res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-
     return res.status(200).json(data);
   } catch (error) {
     return res.status(502).json({
