@@ -13,6 +13,7 @@ const TABS = [
     key: "avances",
     label: "Informes avances",
     source: "Revisión avances",
+    tone: "amber",
     filters: [{ key: "cutoffDate", label: "Fecha corte talleres", type: "date" }],
     columns: [
       { header: "Código", render: (item) => item.code },
@@ -35,6 +36,7 @@ const TABS = [
     key: "ruha",
     label: "Informes semanales RUHA",
     source: "Informes semanales RUHA",
+    tone: "teal",
     filters: [{ key: "cutoffDate", label: "Fecha de corte", type: "date" }],
     columns: [
       { header: "Corte", render: (item) => item.cutoffDate },
@@ -46,6 +48,7 @@ const TABS = [
     key: "reuniones",
     label: "Reuniones supervisión",
     source: "Reuniones_supervisión",
+    tone: "violet",
     filters: [{ key: "date", label: "Fecha", type: "date" }],
     columns: [
       { header: "Fecha", render: (item) => item.date },
@@ -62,6 +65,7 @@ const TABS = [
     key: "cartas",
     label: "Cartas",
     source: "CARTAS",
+    tone: "coral",
     filters: [
       { key: "code", label: "Nro Avance", type: "select" },
       { key: "date", label: "Fecha", type: "date" },
@@ -219,9 +223,9 @@ export default function Home() {
         {data && (
           <>
             <section className="stats">
-              <Stat label="Documentos" value={data.stats.total} />
+              <Stat label="Documentos" value={data.stats.total} tone="celeste" />
               {TABS.map((t) => (
-                <Stat key={t.key} label={t.label} value={sourceCounts[t.key] || 0} />
+                <Stat key={t.key} label={t.label} value={sourceCounts[t.key] || 0} tone={t.tone} />
               ))}
             </section>
 
@@ -508,17 +512,26 @@ export default function Home() {
   );
 }
 
-function Stat({ label, value }) {
+const STAT_TONES = {
+  celeste: { bg: "#e3f4fd", border: "#a9dcf5", text: "#0b6fa1" },
+  amber: { bg: "#fdf1dd", border: "#f3cd8a", text: "#b45309" },
+  teal: { bg: "#e1f7f0", border: "#9fe3cd", text: "#0f7a5c" },
+  violet: { bg: "#efe9fb", border: "#c9b6f2", text: "#6b3fc4" },
+  coral: { bg: "#fdece9", border: "#f5b8ac", text: "#c1442a" },
+};
+
+function Stat({ label, value, tone = "celeste" }) {
+  const colors = STAT_TONES[tone] || STAT_TONES.celeste;
   return (
     <div
       style={{
-        background: "#eef6fc",
-        border: "1px solid #cfe6f5",
+        background: colors.bg,
+        border: `1px solid ${colors.border}`,
         borderRadius: 12,
         padding: "14px 16px",
       }}
     >
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#b45309" }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>{value}</div>
       <div style={{ fontSize: 12, color: "#3a5570" }}>{label}</div>
     </div>
   );
