@@ -2,18 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 
 const SOURCE_LABELS = {
-  "Revisión avances": "Revisión de avances",
+  "Revisión avances": "Informes avances",
   "Informes semanales RUHA": "Informes semanales RUHA",
-  Reuniones_supervisión: "Reuniones de supervisión",
+  Reuniones_supervisión: "Reuniones supervisión",
+  CARTAS: "Cartas",
 };
+
+const TABS = [
+  { key: "avances", label: "Informes avances", source: "Revisión avances" },
+  { key: "ruha", label: "Informes semanales RUHA", source: "Informes semanales RUHA" },
+  { key: "reuniones", label: "Reuniones supervisión", source: "Reuniones_supervisión" },
+  { key: "cartas", label: "Cartas", source: "CARTAS" },
+];
 
 export default function Home() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("documentos");
+  const [tab, setTab] = useState("avances");
   const [query, setQuery] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("todas");
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
 
   useEffect(() => {
@@ -47,15 +54,17 @@ export default function Home() {
     }
   }
 
+  const activeTab = TABS.find((t) => t.key === tab) || TABS[0];
+
   const filteredItems = useMemo(() => {
     if (!data) return [];
     const q = query.trim().toLowerCase();
     return data.items.filter((item) => {
-      const matchesSource = sourceFilter === "todas" || item.source === sourceFilter;
+      const matchesSource = item.source === activeTab.source;
       const matchesQuery = !q || (item.searchText || "").includes(q);
       return matchesSource && matchesQuery;
     });
-  }, [data, query, sourceFilter]);
+  }, [data, query, activeTab]);
 
   return (
     <>
@@ -89,18 +98,18 @@ export default function Home() {
             </section>
 
             <nav className="tabs">
-              {["documentos", "reuniones"].map((t) => (
+              {TABS.map((t) => (
                 <button
-                  key={t}
-                  className={tab === t ? "tab active" : "tab"}
-                  onClick={() => setTab(t)}
+                  key={t.key}
+                  className={tab === t.key ? "tab active" : "tab"}
+                  onClick={() => setTab(t.key)}
                 >
-                  {t[0].toUpperCase() + t.slice(1)}
+                  {t.label}
                 </button>
               ))}
             </nav>
 
-            {tab === "documentos" && (
+            {tab !== "reuniones" && (
               <section>
                 <div className="filters">
                   <input
@@ -108,14 +117,6 @@ export default function Home() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                   />
-                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)}>
-                    <option value="todas">Todas las fuentes</option>
-                    {data.sourceSheets.map((s) => (
-                      <option key={s} value={s}>
-                        {SOURCE_LABELS[s] || s}
-                      </option>
-                    ))}
-                  </select>
                 </div>
                 <div className="grid">
                   {filteredItems.map((item) => (
@@ -252,15 +253,28 @@ export default function Home() {
         .banner.error { background: #4a1e2a; border: 1px solid #7a3244; color: #ffc9d4; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
         .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
-        .tab { border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 13px; }
-        .tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+        .tab {
+          border: 1px solid transparent;
+          background: #ffffff;
+          color: var(--accent-ink);
+          padding: 8px 16px;
+          border-radius: 999px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .tab.active {
+          background: #ffffff;
+          color: var(--accent-ink);
+          border: 2px solid var(--accent);
+          font-weight: 700;
+        }
         .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
         .filters input {
           flex: 1; min-width: 220px; padding: 9px 12px; border-radius: 8px;
           border: 1px solid var(--border); background: var(--surface); color: var(--text);
         }
         .filters input::placeholder { color: var(--text-muted); }
-        .filters select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
         .card {
           background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
