@@ -85,13 +85,11 @@ export default function Home() {
             <section className="stats">
               <Stat label="Documentos" value={data.stats.total} />
               <Stat label="Con archivo vinculado" value={data.stats.linked} />
-              <Stat label="Relaciones detectadas" value={data.stats.relations} />
-              <Stat label="Hitos / plazos" value={data.stats.deadlines} />
               <Stat label="Pendientes de análisis" value={data.stats.pendingAnalysis} />
             </section>
 
             <nav className="tabs">
-              {["documentos", "reuniones", "hitos", "relaciones"].map((t) => (
+              {["documentos", "reuniones"].map((t) => (
                 <button
                   key={t}
                   className={tab === t ? "tab active" : "tab"}
@@ -183,43 +181,6 @@ export default function Home() {
               </section>
             )}
 
-            {tab === "hitos" && (
-              <section className="grid">
-                {data.milestones.map((m) => (
-                  <article key={m.id} className={`card milestone ${statusClass(m.status)}`}>
-                    <span className="badge">{m.status}</span>
-                    <h3>{m.title}</h3>
-                    <p>{m.text}</p>
-                    {m.date && <p className="muted">Fecha: {m.date}</p>}
-                  </article>
-                ))}
-                {data.milestones.length === 0 && <p className="muted">Sin hitos detectados aún.</p>}
-              </section>
-            )}
-
-            {tab === "relaciones" && (
-              <section className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Documento</th>
-                      <th>Menciona a</th>
-                      <th>Motivo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.relations.map((r) => (
-                      <tr key={r.id}>
-                        <td>{r.fromTitle}</td>
-                        <td>{r.toTitle}</td>
-                        <td>{r.reason}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {data.relations.length === 0 && <p className="muted">Sin relaciones detectadas aún.</p>}
-              </section>
-            )}
           </>
         )}
 
@@ -317,8 +278,6 @@ export default function Home() {
           align-self: flex-start; background: rgba(94, 200, 242, 0.14); color: var(--accent);
           font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600;
         }
-        .milestone.próximo, .milestone.proximo { border-color: #e0a740; }
-        .milestone.fecha-pasada { border-color: #e2596b; }
         table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
         th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
         th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
@@ -356,12 +315,4 @@ function Stat({ label, value }) {
       <div style={{ fontSize: 12, color: "#8ea3c4" }}>{label}</div>
     </div>
   );
-}
-
-function statusClass(status) {
-  return String(status || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-");
 }
