@@ -13,6 +13,7 @@ const TABS = [
     key: "avances",
     label: "Informes avances",
     source: "Revisión avances",
+    filters: [{ key: "cutoffDate", label: "Fecha corte talleres" }],
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha corte talleres", render: (item) => item.cutoffDate },
@@ -34,6 +35,7 @@ const TABS = [
     key: "ruha",
     label: "Informes semanales RUHA",
     source: "Informes semanales RUHA",
+    filters: [{ key: "cutoffDate", label: "Fecha de corte" }],
     columns: [
       { header: "Corte", render: (item) => item.cutoffDate },
       { header: "Fecha emisión", render: (item) => item.date },
@@ -44,6 +46,7 @@ const TABS = [
     key: "reuniones",
     label: "Reuniones supervisión",
     source: "Reuniones_supervisión",
+    filters: [{ key: "date", label: "Fecha" }],
     columns: [
       { header: "Fecha", render: (item) => item.date },
       { header: "Acta", render: (item) => item.code },
@@ -59,6 +62,10 @@ const TABS = [
     key: "cartas",
     label: "Cartas",
     source: "CARTAS",
+    filters: [
+      { key: "code", label: "Nro Avance" },
+      { key: "date", label: "Fecha" },
+    ],
     columns: [
       { header: "Fecha", render: (item) => item.date },
       { header: "Nro Avance", render: (item) => item.code },
@@ -87,11 +94,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("avances");
   const [query, setQuery] = useState("");
+  const [filterValues, setFilterValues] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
 
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  useEffect(() => {
+    setFilterValues({});
+  }, [tab]);
 
   async function loadDashboard() {
     setLoading(true);
@@ -122,15 +134,35 @@ export default function Home() {
 
   const activeTab = TABS.find((t) => t.key === tab) || TABS[0];
 
-  const filteredItems = useMemo(() => {
+  const sourceItems = useMemo(() => {
     if (!data) return [];
-    const q = query.trim().toLowerCase();
-    return data.items.filter((item) => {
-      const matchesSource = item.source === activeTab.source;
-      const matchesQuery = !q || (item.searchText || "").includes(q);
-      return matchesSource && matchesQuery;
+    return data.items.filter((item) => item.source === activeTab.source);
+  }, [data, activeTab]);
+
+  const filterOptions = useMemo(() => {
+    const options = {};
+    (activeTab.filters || []).forEach((f) => {
+      const values = sourceItems
+        .map((item) => item[f.key])
+        .filter((v) => v !== undefined && v !== null && v !== "");
+      options[f.key] = Array.from(new Set(values)).sort((a, b) =>
+        String(a).localeCompare(String(b), "es", { numeric: true })
+      );
     });
-  }, [data, query, activeTab]);
+    return options;
+  }, [sourceItems, activeTab]);
+
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sourceItems.filter((item) => {
+      const matchesQuery = !q || (item.searchText || "").includes(q);
+      const matchesFilters = (activeTab.filters || []).every((f) => {
+        const selected = filterValues[f.key];
+        return !selected || selected === "todas" || String(item[f.key]) === selected;
+      });
+      return matchesQuery && matchesFilters;
+    });
+  }, [sourceItems, query, filterValues, activeTab]);
 
   return (
     <>
@@ -182,6 +214,22 @@ export default function Home() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
+                {(activeTab.filters || []).map((f) => (
+                  <select
+                    key={f.key}
+                    value={filterValues[f.key] || "todas"}
+                    onChange={(e) =>
+                      setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))
+                    }
+                  >
+                    <option value="todas">{f.label}: todas</option>
+                    {(filterOptions[f.key] || []).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                ))}
               </div>
               <div className="table-wrap">
                 <table>
