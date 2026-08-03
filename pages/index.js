@@ -143,6 +143,14 @@ export default function Home() {
     }
   }
 
+  const sourceCounts = useMemo(() => {
+    const counts = {};
+    TABS.forEach((t) => {
+      counts[t.key] = data ? data.items.filter((item) => item.source === t.source).length : 0;
+    });
+    return counts;
+  }, [data]);
+
   const activeTab = TABS.find((t) => t.key === tab) || TABS[0];
 
   const sourceItems = useMemo(() => {
@@ -212,8 +220,9 @@ export default function Home() {
           <>
             <section className="stats">
               <Stat label="Documentos" value={data.stats.total} />
-              <Stat label="Con archivo vinculado" value={data.stats.linked} />
-              <Stat label="Pendientes de análisis" value={data.stats.pendingAnalysis} />
+              {TABS.map((t) => (
+                <Stat key={t.key} label={t.label} value={sourceCounts[t.key] || 0} />
+              ))}
             </section>
 
             <nav className="tabs">
@@ -493,14 +502,14 @@ function Stat({ label, value }) {
   return (
     <div
       style={{
-        background: "#132a4d",
-        border: "1px solid #24406b",
+        background: "#eef6fc",
+        border: "1px solid #cfe6f5",
         borderRadius: 12,
         padding: "14px 16px",
       }}
     >
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#5ec8f2" }}>{value}</div>
-      <div style={{ fontSize: 12, color: "#8ea3c4" }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#0b7bb8" }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#3a5570" }}>{label}</div>
     </div>
   );
 }
