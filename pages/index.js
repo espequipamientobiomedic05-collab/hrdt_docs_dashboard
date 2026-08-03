@@ -320,8 +320,14 @@ export default function Home() {
         .milestone.próximo, .milestone.proximo { border-color: #e0a740; }
         .milestone.fecha-pasada { border-color: #e2596b; }
         table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
-        th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+        th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
         th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
+        tbody tr { background: #e7edf5; }
+        tbody tr:nth-child(even) { background: #d3dceb; }
+        tbody tr:hover { background: #bcd2ec; }
+        tbody td { color: #0b1a33; }
+        tbody td a { color: #175a8c; font-weight: 600; }
+        tbody td a:hover { color: #0b3d61; }
         tr:last-child td { border-bottom: none; }
         .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
