@@ -18,17 +18,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = new URLSearchParams();
-    body.set("action", "annexes");
-    body.set("secret", secret);
-    body.set("id", id);
+    const url = new URL(scriptUrl);
+    url.searchParams.set("action", "annexes");
+    url.searchParams.set("secret", secret);
+    url.searchParams.set("id", id);
 
-    const response = await fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString(),
-    });
-
+    const response = await fetch(url.toString(), { method: "GET" });
     const data = await response.json();
     return res.status(200).json(data);
   } catch (error) {
