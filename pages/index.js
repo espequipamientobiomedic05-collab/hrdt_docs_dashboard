@@ -84,3 +84,278 @@ export default function Home() {
           <>
             <section className="stats">
               <Stat label="Documentos" value={data.stats.total} />
+              <Stat label="Con archivo vinculado" value={data.stats.linked} />
+              <Stat label="Relaciones detectadas" value={data.stats.relations} />
+              <Stat label="Hitos / plazos" value={data.stats.deadlines} />
+              <Stat label="Pendientes de análisis" value={data.stats.pendingAnalysis} />
+            </section>
+
+            <nav className="tabs">
+              {["documentos", "reuniones", "hitos", "relaciones"].map((t) => (
+                <button
+                  key={t}
+                  className={tab === t ? "tab active" : "tab"}
+                  onClick={() => setTab(t)}
+                >
+                  {t[0].toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </nav>
+
+            {tab === "documentos" && (
+              <section>
+                <div className="filters">
+                  <input
+                    placeholder="Buscar por título, código, asunto…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                  <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)}>
+                    <option value="todas">Todas las fuentes</option>
+                    {data.sourceSheets.map((s) => (
+                      <option key={s} value={s}>
+                        {SOURCE_LABELS[s] || s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid">
+                  {filteredItems.map((item) => (
+                    <article key={item.id} className="card">
+                      <span className="badge">{SOURCE_LABELS[item.source] || item.source}</span>
+                      <h3>{item.title}</h3>
+                      {item.code && <p className="code">{item.code}</p>}
+                      {item.date && <p className="muted">Fecha: {item.date}</p>}
+                      <p className="summary">{item.summary}</p>
+                      <div className="card-actions">
+                        {item.previewUrl && (
+                          <a href={item.previewUrl} target="_blank" rel="noreferrer">
+                            Ver documento
+                          </a>
+                        )}
+                        {item.annexId && (
+                          <button onClick={() => openAnnexes(item)}>Ver anexos</button>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                  {filteredItems.length === 0 && (
+                    <p className="muted">No hay documentos que coincidan con el filtro.</p>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {tab === "reuniones" && (
+              <section className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Acta</th>
+                      <th>Asunto</th>
+                      <th>Cliente</th>
+                      <th>Contratista</th>
+                      <th>Estado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.meetingItems.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.date}</td>
+                        <td>{item.code}</td>
+                        <td>{item.subject}</td>
+                        <td>{item.client}</td>
+                        <td>{item.contractor}</td>
+                        <td>{item.projectState}</td>
+                        <td>
+                          {item.previewUrl && (
+                            <a href={item.previewUrl} target="_blank" rel="noreferrer">
+                              Ver
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            )}
+
+            {tab === "hitos" && (
+              <section className="grid">
+                {data.milestones.map((m) => (
+                  <article key={m.id} className={`card milestone ${statusClass(m.status)}`}>
+                    <span className="badge">{m.status}</span>
+                    <h3>{m.title}</h3>
+                    <p>{m.text}</p>
+                    {m.date && <p className="muted">Fecha: {m.date}</p>}
+                  </article>
+                ))}
+                {data.milestones.length === 0 && <p className="muted">Sin hitos detectados aún.</p>}
+              </section>
+            )}
+
+            {tab === "relaciones" && (
+              <section className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Documento</th>
+                      <th>Menciona a</th>
+                      <th>Motivo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.relations.map((r) => (
+                      <tr key={r.id}>
+                        <td>{r.fromTitle}</td>
+                        <td>{r.toTitle}</td>
+                        <td>{r.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {data.relations.length === 0 && <p className="muted">Sin relaciones detectadas aún.</p>}
+              </section>
+            )}
+          </>
+        )}
+
+        {loading && !data && <p className="muted">Cargando dashboard…</p>}
+
+        {annexModal && (
+          <div className="modal-backdrop" onClick={() => setAnnexModal(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{annexModal.title}</h2>
+                <button onClick={() => setAnnexModal(null)}>✕</button>
+              </div>
+              {annexModal.loading && <p className="muted">Cargando anexos…</p>}
+              {annexModal.error && <p className="banner error">{annexModal.error}</p>}
+              <ul className="annex-list">
+                {annexModal.files.map((f) => (
+                  <li key={f.id}>
+                    <a href={f.previewUrl} target="_blank" rel="noreferrer">
+                      {f.path ? `${f.path} / ${f.name}` : f.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </main>
+      <style jsx global>{`
+        :root {
+          --bg: #0b1a33;
+          --surface: #132a4d;
+          --surface-2: #1a3660;
+          --border: #24406b;
+          --accent: #5ec8f2;
+          --accent-strong: #38b6f0;
+          --accent-ink: #04283d;
+          --text: #eef3fa;
+          --text-muted: #8ea3c4;
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          background: var(--bg);
+          color: var(--text);
+        }
+      `}</style>
+      <style jsx>{`
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+        h1 { margin: 0; font-size: 24px; color: var(--text); letter-spacing: 0.2px; }
+        .muted { color: var(--text-muted); font-size: 13px; }
+        .actions { display: flex; gap: 8px; }
+        .ghost-btn {
+          border: 1px solid var(--accent);
+          background: var(--accent);
+          color: var(--accent-ink);
+          padding: 8px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 600;
+          transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .ghost-btn:hover { background: var(--accent-strong); }
+        .ghost-btn:active { transform: translateY(1px); }
+        .ghost-btn:disabled { opacity: 0.6; cursor: default; }
+        .banner.error { background: #4a1e2a; border: 1px solid #7a3244; color: #ffc9d4; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+        .tab { border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 13px; }
+        .tab.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+        .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filters input {
+          flex: 1; min-width: 220px; padding: 9px 12px; border-radius: 8px;
+          border: 1px solid var(--border); background: var(--surface); color: var(--text);
+        }
+        .filters input::placeholder { color: var(--text-muted); }
+        .filters select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .card {
+          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+          padding: 16px; display: flex; flex-direction: column; gap: 6px;
+          transition: border-color 0.15s ease;
+        }
+        .card:hover { border-color: var(--accent); }
+        .card h3 { margin: 4px 0; font-size: 15px; color: var(--text); }
+        .card .code { font-size: 12px; color: var(--accent); font-weight: 600; }
+        .card .summary { font-size: 13px; color: var(--text-muted); }
+        .card-actions { margin-top: auto; display: flex; gap: 10px; padding-top: 8px; }
+        .card-actions a, .card-actions button { font-size: 13px; border: none; background: none; color: var(--accent); cursor: pointer; padding: 0; }
+        .card-actions a:hover, .card-actions button:hover { color: var(--accent-strong); }
+        .badge {
+          align-self: flex-start; background: rgba(94, 200, 242, 0.14); color: var(--accent);
+          font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600;
+        }
+        .milestone.próximo, .milestone.proximo { border-color: #e0a740; }
+        .milestone.fecha-pasada { border-color: #e2596b; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
+        th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+        th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { color: var(--text); font-size: 16px; }
+        .modal-header button { border: none; background: none; font-size: 16px; cursor: pointer; color: var(--text-muted); }
+        .annex-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+        .annex-list a { color: var(--accent); text-decoration: none; font-size: 13px; }
+        .annex-list a:hover { color: var(--accent-strong); }
+      `}</style>
+    </>
+  );
+}
+
+function Stat({ label, value }) {
+  return (
+    <div
+      style={{
+        background: "#132a4d",
+        border: "1px solid #24406b",
+        borderRadius: 12,
+        padding: "14px 16px",
+      }}
+    >
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#5ec8f2" }}>{value}</div>
+      <div style={{ fontSize: 12, color: "#8ea3c4" }}>{label}</div>
+    </div>
+  );
+}
+
+function statusClass(status) {
+  return String(status || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-");
+}
