@@ -201,7 +201,7 @@ export default function Home() {
                         ))}
                         <td className="archivo-cell">
                           {item.previewUrl ? (
-                            
+                            <a
                               href={item.previewUrl}
                               target="_blank"
                               rel="noreferrer"
@@ -318,6 +318,26 @@ export default function Home() {
           border: 1px solid var(--border); background: var(--surface); color: var(--text);
         }
         .filters input::placeholder { color: var(--text-muted); }
+        .filters select { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .card {
+          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+          padding: 16px; display: flex; flex-direction: column; gap: 6px;
+          transition: border-color 0.15s ease;
+        }
+        .card:hover { border-color: var(--accent); }
+        .card h3 { margin: 4px 0; font-size: 15px; color: var(--text); }
+        .card .code { font-size: 12px; color: var(--accent); font-weight: 600; }
+        .card .summary { font-size: 13px; color: var(--text-muted); }
+        .card-actions { margin-top: auto; display: flex; gap: 10px; padding-top: 8px; }
+        .card-actions a, .card-actions button { font-size: 13px; border: none; background: none; color: var(--accent); cursor: pointer; padding: 0; }
+        .card-actions a:hover, .card-actions button:hover { color: var(--accent-strong); }
+        .badge {
+          align-self: flex-start; background: rgba(94, 200, 242, 0.14); color: var(--accent);
+          font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600;
+        }
+        .milestone.próximo, .milestone.proximo { border-color: #e0a740; }
+        .milestone.fecha-pasada { border-color: #e2596b; }
         table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
         th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
         th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
@@ -360,4 +380,12 @@ function Stat({ label, value }) {
       <div style={{ fontSize: 12, color: "#8ea3c4" }}>{label}</div>
     </div>
   );
+}
+
+function statusClass(status) {
+  return String(status || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-");
 }
