@@ -9,11 +9,77 @@ const SOURCE_LABELS = {
 };
 
 const TABS = [
-  { key: "avances", label: "Informes avances", source: "Revisión avances" },
-  { key: "ruha", label: "Informes semanales RUHA", source: "Informes semanales RUHA" },
-  { key: "reuniones", label: "Reuniones supervisión", source: "Reuniones_supervisión" },
-  { key: "cartas", label: "Cartas", source: "CARTAS" },
+  {
+    key: "avances",
+    label: "Informes avances",
+    source: "Revisión avances",
+    columns: [
+      { header: "Código", render: (item) => item.code },
+      { header: "Fecha corte talleres", render: (item) => item.cutoffDate },
+      { header: "Documento", render: (item) => item.title },
+      {
+        header: "Anexos",
+        render: (item, ctx) =>
+          item.annexId ? (
+            <button className="link-btn" onClick={() => ctx.openAnnexes(item)}>
+              Ver anexos
+            </button>
+          ) : (
+            "—"
+          ),
+      },
+    ],
+  },
+  {
+    key: "ruha",
+    label: "Informes semanales RUHA",
+    source: "Informes semanales RUHA",
+    columns: [
+      { header: "Corte", render: (item) => item.cutoffDate },
+      { header: "Fecha emisión", render: (item) => item.date },
+      { header: "Documento", render: (item) => item.title },
+    ],
+  },
+  {
+    key: "reuniones",
+    label: "Reuniones supervisión",
+    source: "Reuniones_supervisión",
+    columns: [
+      { header: "Fecha", render: (item) => item.date },
+      { header: "Acta", render: (item) => item.code },
+      { header: "Asunto", render: (item) => item.subject },
+      { header: "Cliente", render: (item) => item.client },
+      { header: "Contratista", render: (item) => item.contractor },
+      { header: "Supervisión", render: (item) => item.supervision },
+      { header: "Estado proyecto", render: (item) => item.projectState },
+      { header: "Revisado", render: (item) => item.reviewed },
+    ],
+  },
+  {
+    key: "cartas",
+    label: "Cartas",
+    source: "CARTAS",
+    columns: [
+      { header: "Fecha", render: (item) => item.date },
+      { header: "Nro Avance", render: (item) => item.code },
+      { header: "Destinatario", render: (item) => item.client },
+    ],
+  },
 ];
+
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -109,79 +175,56 @@ export default function Home() {
               ))}
             </nav>
 
-            {tab !== "reuniones" && (
-              <section>
-                <div className="filters">
-                  <input
-                    placeholder="Buscar por título, código, asunto…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
-                <div className="grid">
-                  {filteredItems.map((item) => (
-                    <article key={item.id} className="card">
-                      <span className="badge">{SOURCE_LABELS[item.source] || item.source}</span>
-                      <h3>{item.title}</h3>
-                      {item.code && <p className="code">{item.code}</p>}
-                      {item.date && <p className="muted">Fecha: {item.date}</p>}
-                      <p className="summary">{item.summary}</p>
-                      <div className="card-actions">
-                        {item.previewUrl && (
-                          <a href={item.previewUrl} target="_blank" rel="noreferrer">
-                            Ver documento
-                          </a>
-                        )}
-                        {item.annexId && (
-                          <button onClick={() => openAnnexes(item)}>Ver anexos</button>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                  {filteredItems.length === 0 && (
-                    <p className="muted">No hay documentos que coincidan con el filtro.</p>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {tab === "reuniones" && (
-              <section className="table-wrap">
+            <section>
+              <div className="filters">
+                <input
+                  placeholder="Buscar por título, código, asunto…"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+              <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Fecha</th>
-                      <th>Acta</th>
-                      <th>Asunto</th>
-                      <th>Cliente</th>
-                      <th>Contratista</th>
-                      <th>Estado</th>
-                      <th></th>
+                      {activeTab.columns.map((col) => (
+                        <th key={col.header}>{col.header}</th>
+                      ))}
+                      <th>Archivo</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data.meetingItems.map((item) => (
+                    {filteredItems.map((item) => (
                       <tr key={item.id}>
-                        <td>{item.date}</td>
-                        <td>{item.code}</td>
-                        <td>{item.subject}</td>
-                        <td>{item.client}</td>
-                        <td>{item.contractor}</td>
-                        <td>{item.projectState}</td>
-                        <td>
-                          {item.previewUrl && (
-                            <a href={item.previewUrl} target="_blank" rel="noreferrer">
-                              Ver
+                        {activeTab.columns.map((col) => (
+                          <td key={col.header}>{col.render(item, { openAnnexes })}</td>
+                        ))}
+                        <td className="archivo-cell">
+                          {item.previewUrl ? (
+                            
+                              href={item.previewUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="eye-link"
+                              title="Ver documento"
+                            >
+                              <EyeIcon />
                             </a>
+                          ) : (
+                            "—"
                           )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </section>
-            )}
-
+                {filteredItems.length === 0 && (
+                  <p className="muted" style={{ padding: "12px 4px" }}>
+                    No hay documentos que coincidan con el filtro.
+                  </p>
+                )}
+              </div>
+            </section>
           </>
         )}
 
@@ -275,23 +318,6 @@ export default function Home() {
           border: 1px solid var(--border); background: var(--surface); color: var(--text);
         }
         .filters input::placeholder { color: var(--text-muted); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-        .card {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-          padding: 16px; display: flex; flex-direction: column; gap: 6px;
-          transition: border-color 0.15s ease;
-        }
-        .card:hover { border-color: var(--accent); }
-        .card h3 { margin: 4px 0; font-size: 15px; color: var(--text); }
-        .card .code { font-size: 12px; color: var(--accent); font-weight: 600; }
-        .card .summary { font-size: 13px; color: var(--text-muted); }
-        .card-actions { margin-top: auto; display: flex; gap: 10px; padding-top: 8px; }
-        .card-actions a, .card-actions button { font-size: 13px; border: none; background: none; color: var(--accent); cursor: pointer; padding: 0; }
-        .card-actions a:hover, .card-actions button:hover { color: var(--accent-strong); }
-        .badge {
-          align-self: flex-start; background: rgba(94, 200, 242, 0.14); color: var(--accent);
-          font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 600;
-        }
         table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
         th, td { text-align: left; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
         th { background: var(--surface-2); color: var(--text-muted); font-weight: 600; }
@@ -301,6 +327,11 @@ export default function Home() {
         tbody td { color: #0b1a33; }
         tbody td a { color: #175a8c; font-weight: 600; }
         tbody td a:hover { color: #0b3d61; }
+        .link-btn { border: none; background: none; color: #175a8c; font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; }
+        .link-btn:hover { color: #0b3d61; }
+        .archivo-cell { text-align: center; }
+        .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
+        .eye-link:hover { color: #0b3d61; }
         tr:last-child td { border-bottom: none; }
         .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
