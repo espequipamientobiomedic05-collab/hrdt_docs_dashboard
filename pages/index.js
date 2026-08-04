@@ -200,6 +200,7 @@ export default function Home() {
   const [dateRanges, setDateRanges] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
   const [addModal, setAddModal] = useState(null); // {values, saving, error, success}
+  const [preview, setPreview] = useState(null); // {title, url}
 
   useEffect(() => {
     loadDashboard();
@@ -362,6 +363,7 @@ export default function Home() {
       <Head>
         <title>Dashboard Documental HRDT</title>
       </Head>
+      <div className={preview ? "app-shell split" : "app-shell"}>
       <main className="wrap">
         <header className="header">
           <div>
@@ -485,15 +487,16 @@ export default function Home() {
                         ))}
                         <td className="archivo-cell">
                           {item.previewUrl ? (
-                            <a
-                              href={item.previewUrl}
-                              target="_blank"
-                              rel="noreferrer"
+                            <button
+                              type="button"
                               className="eye-link"
                               title="Ver documento"
+                              onClick={() =>
+                                setPreview({ title: item.title || item.code, url: item.previewUrl })
+                              }
                             >
                               <EyeIcon />
-                            </a>
+                            </button>
                           ) : (
                             "—"
                           )}
@@ -526,9 +529,16 @@ export default function Home() {
               <ul className="annex-list">
                 {annexModal.files.map((f) => (
                   <li key={f.id}>
-                    <a href={f.previewUrl} target="_blank" rel="noreferrer">
+                    <button
+                      type="button"
+                      className="annex-link-btn"
+                      onClick={() => {
+                        setPreview({ title: f.name, url: f.previewUrl });
+                        setAnnexModal(null);
+                      }}
+                    >
                       {f.path ? `${f.path} / ${f.name}` : f.name}
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -620,6 +630,28 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {preview && (
+        <aside className="preview-pane">
+          <div className="preview-header">
+            <span className="preview-title">{preview.title}</span>
+            <button
+              type="button"
+              className="preview-close"
+              onClick={() => setPreview(null)}
+            >
+              ✕ Cerrar
+            </button>
+          </div>
+          <iframe
+            key={preview.url}
+            src={preview.url}
+            title={preview.title}
+            className="preview-frame"
+          />
+        </aside>
+      )}
+      </div>
       <style jsx global>{`
         :root {
           --bg: #0b1a33;
@@ -643,6 +675,47 @@ export default function Home() {
         }
       `}</style>
       <style jsx>{`
+        .app-shell {
+          min-height: 100vh;
+        }
+        .app-shell.split {
+          display: flex;
+          align-items: stretch;
+          height: 100vh;
+          overflow: hidden;
+        }
+        .app-shell.split .wrap {
+          flex: 1 1 55%;
+          height: 100vh;
+          overflow-y: auto;
+          margin: 0;
+          border-radius: 0;
+          max-width: none;
+        }
+        .preview-pane {
+          flex: 1 1 45%;
+          min-width: 320px;
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background: #ffffff;
+          border-left: 3px solid var(--accent);
+        }
+        .preview-header {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; padding: 10px 14px; background: var(--surface-2);
+        }
+        .preview-title {
+          color: var(--text); font-size: 13px; font-weight: 600;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .preview-close {
+          border: none; background: var(--accent); color: var(--accent-ink);
+          font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 6px;
+          cursor: pointer; white-space: nowrap;
+        }
+        .preview-close:hover { background: var(--accent-strong); }
+        .preview-frame { flex: 1; width: 100%; border: none; }
         .wrap {
           max-width: 1100px;
           margin: 32px auto 60px;
@@ -773,8 +846,11 @@ export default function Home() {
         .modal-header h2 { color: var(--text); font-size: 16px; }
         .modal-header button { border: none; background: none; font-size: 16px; cursor: pointer; color: var(--text-muted); }
         .annex-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
-        .annex-list a { color: var(--accent); text-decoration: none; font-size: 13px; }
-        .annex-list a:hover { color: var(--accent-strong); }
+        .annex-link-btn {
+          background: none; border: none; color: var(--accent); text-decoration: none;
+          font-size: 13px; cursor: pointer; padding: 0; text-align: left;
+        }
+        .annex-link-btn:hover { color: var(--accent-strong); }
       `}</style>
     </>
   );
