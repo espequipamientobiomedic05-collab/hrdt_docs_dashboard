@@ -2,19 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 
 const SOURCE_LABELS = {
-  "Revisión avances": "Informes avances",
+  "Revisión avances": "Informes PRONIS",
   "Informes semanales RUHA": "Informes semanales RUHA",
   Reuniones_supervisión: "Reuniones supervisión",
-  CARTAS: "Cartas",
+  CARTAS: "Cartas PRONIS-SUPERV",
+  "Informes SDD": "Informes SDD",
+  "Informes RANF_RANT": "Informe RAN",
 };
 
 const TABS = [
   {
     key: "avances",
-    label: "Informes avances",
+    label: "Informes PRONIS",
     source: "Revisión avances",
     tone: "amber",
     filters: [{ key: "cutoffDate", label: "Fecha corte talleres", type: "date" }],
+    addFields: [
+      { key: "code", label: "Código", required: true },
+      { key: "cutoffDate", label: "Fecha corte talleres", type: "date", required: true },
+      { key: "annexTitle", label: "Nombre de la carpeta de anexos (opcional)" },
+    ],
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha corte talleres", render: (item) => item.cutoffDate },
@@ -37,10 +44,18 @@ const TABS = [
     label: "Informes semanales RUHA",
     source: "Informes semanales RUHA",
     tone: "teal",
-    filters: [{ key: "cutoffDate", label: "Fecha de corte", type: "date" }],
+    filters: [{ key: "cutoffDate", label: "Corte", type: "date" }],
+    addFields: [
+      { key: "code", label: "Código", required: true },
+      { key: "cutoffDate", label: "Corte", type: "date", required: true },
+      { key: "date", label: "Fecha emisión", type: "date", required: true },
+      { key: "week", label: "Semana" },
+    ],
     columns: [
+      { header: "Código", render: (item) => item.code },
       { header: "Corte", render: (item) => item.cutoffDate },
       { header: "Fecha emisión", render: (item) => item.date },
+      { header: "Semana", render: (item) => item.week },
       { header: "Documento", render: (item) => item.title },
     ],
   },
@@ -49,9 +64,19 @@ const TABS = [
     label: "Reuniones supervisión",
     source: "Reuniones_supervisión",
     tone: "violet",
-    filters: [{ key: "date", label: "Fecha", type: "date" }],
+    filters: [{ key: "date", label: "Fecha reunión", type: "date" }],
+    addFields: [
+      { key: "date", label: "Fecha reunión", type: "date", required: true },
+      { key: "code", label: "Acta", required: true },
+      { key: "subject", label: "Asunto" },
+      { key: "client", label: "Cliente" },
+      { key: "contractor", label: "Contratista" },
+      { key: "supervision", label: "Supervisión" },
+      { key: "projectState", label: "Estado proyecto" },
+      { key: "reviewed", label: "Revisado" },
+    ],
     columns: [
-      { header: "Fecha", render: (item) => item.date },
+      { header: "Fecha reunión", render: (item) => item.date },
       { header: "Acta", render: (item) => item.code },
       { header: "Asunto", render: (item) => item.subject },
       { header: "Cliente", render: (item) => item.client },
@@ -63,17 +88,73 @@ const TABS = [
   },
   {
     key: "cartas",
-    label: "Cartas",
+    label: "Cartas PRONIS-SUPERV",
     source: "CARTAS",
     tone: "coral",
     filters: [
-      { key: "code", label: "Nro Avance", type: "select" },
+      { key: "number", label: "Nro Avance", type: "select" },
       { key: "date", label: "Fecha", type: "date" },
     ],
+    addFields: [
+      { key: "code", label: "Código" },
+      { key: "date", label: "Fecha", type: "date", required: true },
+      { key: "number", label: "Nro Avance", required: true },
+      { key: "client", label: "Destinatario" },
+    ],
     columns: [
+      { header: "Código", render: (item) => item.code },
       { header: "Fecha", render: (item) => item.date },
-      { header: "Nro Avance", render: (item) => item.code },
+      { header: "Nro Avance", render: (item) => item.number },
       { header: "Destinatario", render: (item) => item.client },
+    ],
+  },
+  {
+    key: "sdd",
+    label: "Informes SDD",
+    source: "Informes SDD",
+    tone: "indigo",
+    filters: [{ key: "cutoffDate", label: "Corte", type: "date" }],
+    addFields: [
+      { key: "code", label: "Código", required: true },
+      { key: "week", label: "Semana" },
+      { key: "cutoffDate", label: "Corte", type: "date", required: true },
+    ],
+    columns: [
+      { header: "Código", render: (item) => item.code },
+      { header: "Semana", render: (item) => item.week },
+      { header: "Corte", render: (item) => item.cutoffDate },
+      { header: "Documento", render: (item) => item.title },
+    ],
+  },
+  {
+    key: "ran",
+    label: "Informe RAN",
+    source: "Informes RANF_RANT",
+    tone: "rose",
+    filters: [{ key: "date", label: "Fecha", type: "date" }],
+    addFields: [
+      { key: "code", label: "Código", required: true },
+      { key: "docType", label: "Tipo", required: true },
+      { key: "number", label: "Informe", required: true },
+      { key: "date", label: "Fecha", type: "date", required: true },
+      { key: "annexTitle", label: "Nombre de la carpeta de anexos (opcional)" },
+    ],
+    columns: [
+      { header: "Código", render: (item) => item.code },
+      { header: "Tipo", render: (item) => item.docType },
+      { header: "Informe", render: (item) => item.number },
+      { header: "Fecha", render: (item) => item.date },
+      {
+        header: "Anexos",
+        render: (item, ctx) =>
+          item.annexId ? (
+            <button className="link-btn" onClick={() => ctx.openAnnexes(item)}>
+              Ver anexos
+            </button>
+          ) : (
+            "—"
+          ),
+      },
     ],
   },
 ];
@@ -85,6 +166,14 @@ function toIsoDate(value) {
   if (!match) return "";
   const [, d, m, y] = match;
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+// Convierte "2026-07-31" (input nativo) a "31/07/2026" (formato del Sheet).
+function fromIsoDate(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return value || "";
+  const [, y, m, d] = match;
+  return `${d}/${m}/${y}`;
 }
 
 function EyeIcon() {
@@ -110,6 +199,7 @@ export default function Home() {
   const [filterValues, setFilterValues] = useState({});
   const [dateRanges, setDateRanges] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
+  const [addModal, setAddModal] = useState(null); // {values, saving, error, success}
 
   useEffect(() => {
     loadDashboard();
@@ -144,6 +234,76 @@ export default function Home() {
       setAnnexModal({ title: json.data.title, files: json.data.files, loading: false, error: "" });
     } catch (e) {
       setAnnexModal((prev) => ({ ...prev, loading: false, error: e.message }));
+    }
+  }
+
+  function openAddModal() {
+    setAddModal({ values: {}, file: null, saving: false, error: "", success: null });
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result || "";
+        const base64 = String(result).split(",")[1] || "";
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function submitAddModal(e) {
+    e.preventDefault();
+    const file = addModal.file;
+    if (!file) {
+      setAddModal((prev) => ({ ...prev, error: "Seleccioná un archivo." }));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setAddModal((prev) => ({ ...prev, error: "El archivo supera los 8 MB." }));
+      return;
+    }
+
+    setAddModal((prev) => ({ ...prev, saving: true, error: "" }));
+    try {
+      const fields = {};
+      activeTab.addFields.forEach((f) => {
+        const raw = addModal.values[f.key] || "";
+        fields[f.key] = f.type === "date" ? fromIsoDate(raw) : raw;
+      });
+      const missing = activeTab.addFields.filter((f) => f.required && !fields[f.key]);
+      if (missing.length) {
+        throw new Error("Completá: " + missing.map((f) => f.label).join(", "));
+      }
+
+      const fileBase64 = await readFileAsBase64(file);
+
+      const res = await fetch("/api/upload-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: activeTab.source,
+          fields,
+          fileName: file.name,
+          fileMimeType: file.type || "application/octet-stream",
+          fileBase64,
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Error desconocido");
+
+      setAddModal({
+        values: {},
+        file: null,
+        saving: false,
+        error: "",
+        success: { fileName: file.name, fileUrl: json.data.fileUrl },
+      });
+      loadDashboard();
+    } catch (err) {
+      setAddModal((prev) => ({ ...prev, saving: false, error: err.message }));
     }
   }
 
@@ -303,6 +463,9 @@ export default function Home() {
                     </select>
                   )
                 )}
+                <button type="button" className="add-btn" onClick={openAddModal}>
+                  + Agregar documento
+                </button>
               </div>
               <div className="table-wrap">
                 <table>
@@ -369,6 +532,90 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
+            </div>
+          </div>
+        )}
+
+        {addModal && (
+          <div className="modal-backdrop" onClick={() => setAddModal(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Agregar documento — {activeTab.label}</h2>
+                <button onClick={() => setAddModal(null)}>✕</button>
+              </div>
+
+              {addModal.success ? (
+                <div className="add-success">
+                  <p>
+                    El documento se subió correctamente a Drive y se agregó la fila al Google
+                    Sheet.
+                  </p>
+                  <code className="filename-chip">{addModal.success.fileName}</code>
+                  <a
+                    className="ghost-btn"
+                    style={{ display: "inline-block", marginTop: 14 }}
+                    href={addModal.success.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver documento
+                  </a>
+                  <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+                    <button type="button" className="add-btn" onClick={openAddModal}>
+                      Agregar otro
+                    </button>
+                    <button
+                      type="button"
+                      className="link-btn"
+                      onClick={() => setAddModal(null)}
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={submitAddModal} className="add-form">
+                  {activeTab.addFields.map((f) => (
+                    <label key={f.key} className="add-form-field">
+                      <span>
+                        {f.label}
+                        {f.required && <span className="required-mark"> *</span>}
+                      </span>
+                      <input
+                        type={f.type === "date" ? "date" : "text"}
+                        value={addModal.values[f.key] || ""}
+                        onChange={(e) =>
+                          setAddModal((prev) => ({
+                            ...prev,
+                            values: { ...prev.values, [f.key]: e.target.value },
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+                  <label className="add-form-field">
+                    <span>
+                      Archivo <span className="required-mark">*</span>
+                    </span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.jpg,.jpeg,.png"
+                      onChange={(e) =>
+                        setAddModal((prev) => ({ ...prev, file: e.target.files?.[0] || null }))
+                      }
+                    />
+                    {addModal.file && (
+                      <span className="file-hint">
+                        {addModal.file.name} ({(addModal.file.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    )}
+                  </label>
+                  {addModal.error && <p className="banner error">{addModal.error}</p>}
+                  <button type="submit" className="add-btn" disabled={addModal.saving}>
+                    {addModal.saving ? "Subiendo…" : "Guardar y subir"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         )}
@@ -465,6 +712,27 @@ export default function Home() {
           font-size: 13px; padding: 0 2px;
         }
         .date-range-clear:hover { color: var(--accent); }
+        .add-btn {
+          border: none; background: var(--accent-2); color: #3a2400; font-weight: 700;
+          padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+          white-space: nowrap;
+        }
+        .add-btn:hover { background: var(--accent-2-strong); }
+        .add-btn:disabled { opacity: 0.6; cursor: default; }
+        .add-form { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+        .add-form-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted); }
+        .add-form-field input {
+          background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+          border-radius: 8px; padding: 8px 10px; font-size: 13px; color-scheme: dark;
+        }
+        .add-form-field input[type="file"] { padding: 8px 6px; }
+        .file-hint { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+        .required-mark { color: var(--accent-2); }
+        .add-success { margin-top: 8px; color: var(--text); font-size: 14px; line-height: 1.5; }
+        .filename-chip {
+          display: inline-block; background: var(--surface-2); color: var(--accent);
+          padding: 4px 10px; border-radius: 6px; font-size: 13px; margin-top: 6px;
+        }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
         .card {
           background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
@@ -518,6 +786,8 @@ const STAT_TONES = {
   teal: { bg: "#e1f7f0", border: "#9fe3cd", text: "#0f7a5c" },
   violet: { bg: "#efe9fb", border: "#c9b6f2", text: "#6b3fc4" },
   coral: { bg: "#fdece9", border: "#f5b8ac", text: "#c1442a" },
+  indigo: { bg: "#e8eafd", border: "#c3c9f7", text: "#4338ca" },
+  rose: { bg: "#fde8f1", border: "#f5b8d4", text: "#be185d" },
 };
 
 function Stat({ label, value, tone = "celeste" }) {
