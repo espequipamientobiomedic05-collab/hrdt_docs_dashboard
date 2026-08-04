@@ -66,8 +66,8 @@ const TABS = [
     tone: "violet",
     filters: [{ key: "date", label: "Fecha reunión", type: "date" }],
     addFields: [
+      { key: "code", label: "Código", required: true },
       { key: "date", label: "Fecha reunión", type: "date", required: true },
-      { key: "code", label: "Acta", required: true },
       { key: "subject", label: "Asunto" },
       { key: "client", label: "Cliente" },
       { key: "contractor", label: "Contratista" },
@@ -76,8 +76,8 @@ const TABS = [
       { key: "reviewed", label: "Revisado" },
     ],
     columns: [
+      { header: "Código", render: (item) => item.code },
       { header: "Fecha reunión", render: (item) => item.date },
-      { header: "Acta", render: (item) => item.code },
       { header: "Asunto", render: (item) => item.subject },
       { header: "Cliente", render: (item) => item.client },
       { header: "Contratista", render: (item) => item.contractor },
