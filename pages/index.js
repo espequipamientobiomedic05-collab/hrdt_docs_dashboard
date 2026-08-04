@@ -17,15 +17,15 @@ const TABS = [
     label: "Informes PRONIS",
     source: "Revisión avances",
     tone: "amber",
-    filters: [{ key: "cutoffDate", label: "Fecha corte talleres", type: "date" }],
+    filters: [{ key: "cutoffDate", label: "Fecha emisión", type: "date" }],
     addFields: [
       { key: "code", label: "Código", required: true },
-      { key: "cutoffDate", label: "Fecha corte talleres", type: "date", required: true },
+      { key: "cutoffDate", label: "Fecha emisión", type: "date", required: true },
       { key: "annexTitle", label: "Nombre de la carpeta de anexos (opcional)" },
     ],
     columns: [
       { header: "Código", render: (item) => item.code },
-      { header: "Fecha corte talleres", render: (item) => item.cutoffDate },
+      { header: "Fecha emisión", render: (item) => item.cutoffDate },
       { header: "Documento", render: (item) => item.title },
       {
         header: "Anexos",
@@ -224,6 +224,7 @@ export default function Home() {
   const [dateRanges, setDateRanges] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
   const [preview, setPreview] = useState(null); // {title, url}
+  const [addModal, setAddModal] = useState(null); // {destKey, values, file, saving, error, success}
 
   useEffect(() => {
     loadDashboard();
@@ -258,6 +259,85 @@ export default function Home() {
       setAnnexModal({ title: json.data.title, files: json.data.files, loading: false, error: "" });
     } catch (e) {
       setAnnexModal((prev) => ({ ...prev, loading: false, error: e.message }));
+    }
+  }
+
+  function openAddModal(defaultKey) {
+    setAddModal({
+      destKey: defaultKey || TABS[0].key,
+      values: {},
+      file: null,
+      saving: false,
+      error: "",
+      success: null,
+    });
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result || "";
+        const base64 = String(result).split(",")[1] || "";
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function submitAddModal(e) {
+    e.preventDefault();
+    const destTab = TABS.find((t) => t.key === addModal.destKey) || TABS[0];
+    const file = addModal.file;
+    if (!file) {
+      setAddModal((prev) => ({ ...prev, error: "Seleccioná un archivo." }));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setAddModal((prev) => ({ ...prev, error: "El archivo supera los 8 MB." }));
+      return;
+    }
+
+    setAddModal((prev) => ({ ...prev, saving: true, error: "" }));
+    try {
+      const fields = {};
+      destTab.addFields.forEach((f) => {
+        const raw = addModal.values[f.key] || "";
+        fields[f.key] = f.type === "date" ? fromIsoDate(raw) : raw;
+      });
+      const missing = destTab.addFields.filter((f) => f.required && !fields[f.key]);
+      if (missing.length) {
+        throw new Error("Completá: " + missing.map((f) => f.label).join(", "));
+      }
+
+      const fileBase64 = await readFileAsBase64(file);
+
+      const res = await fetch("/api/upload-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: destTab.source,
+          fields,
+          fileName: file.name,
+          fileMimeType: file.type || "application/octet-stream",
+          fileBase64,
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Error desconocido");
+
+      setAddModal({
+        destKey: addModal.destKey,
+        values: {},
+        file: null,
+        saving: false,
+        error: "",
+        success: { destLabel: destTab.label, fileName: file.name, fileUrl: json.data.fileUrl },
+      });
+      loadDashboard();
+    } catch (err) {
+      setAddModal((prev) => ({ ...prev, saving: false, error: err.message }));
     }
   }
 
@@ -329,6 +409,9 @@ export default function Home() {
             </a>
             <button className="ghost-btn" onClick={loadDashboard} disabled={loading}>
               {loading ? "Actualizando…" : "Actualizar"}
+            </button>
+            <button className="add-btn" onClick={() => openAddModal(tab)}>
+              + Agregar documento
             </button>
           </div>
         </header>
