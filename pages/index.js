@@ -578,6 +578,113 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {addModal && (
+          <div className="modal-backdrop" onClick={() => setAddModal(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Agregar documento</h2>
+                <button onClick={() => setAddModal(null)}>✕</button>
+              </div>
+
+              {addModal.success ? (
+                <div className="add-success">
+                  <p>
+                    El documento se subió correctamente a <strong>{addModal.success.destLabel}</strong> y
+                    se agregó la fila al Google Sheet.
+                  </p>
+                  <code className="filename-chip">{addModal.success.fileName}</code>
+                  <a
+                    className="ghost-btn"
+                    style={{ display: "inline-block", marginTop: 14 }}
+                    href={addModal.success.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Ver documento
+                  </a>
+                  <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+                    <button
+                      type="button"
+                      className="add-btn"
+                      onClick={() => openAddModal(addModal.destKey)}
+                    >
+                      Agregar otro
+                    </button>
+                    <button type="button" className="link-btn" onClick={() => setAddModal(null)}>
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={submitAddModal} className="add-form">
+                  <label className="add-form-field">
+                    <span>
+                      Destino <span className="required-mark">*</span>
+                    </span>
+                    <select
+                      value={addModal.destKey}
+                      onChange={(e) =>
+                        setAddModal((prev) => ({
+                          ...prev,
+                          destKey: e.target.value,
+                          values: {},
+                          error: "",
+                        }))
+                      }
+                    >
+                      {TABS.map((t) => (
+                        <option key={t.key} value={t.key}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {(TABS.find((t) => t.key === addModal.destKey) || TABS[0]).addFields.map((f) => (
+                    <label key={f.key} className="add-form-field">
+                      <span>
+                        {f.label}
+                        {f.required && <span className="required-mark"> *</span>}
+                      </span>
+                      <input
+                        type={f.type === "date" ? "date" : "text"}
+                        value={addModal.values[f.key] || ""}
+                        onChange={(e) =>
+                          setAddModal((prev) => ({
+                            ...prev,
+                            values: { ...prev.values, [f.key]: e.target.value },
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+                  <label className="add-form-field">
+                    <span>
+                      Archivo <span className="required-mark">*</span>
+                    </span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.jpg,.jpeg,.png"
+                      onChange={(e) =>
+                        setAddModal((prev) => ({ ...prev, file: e.target.files?.[0] || null }))
+                      }
+                    />
+                    {addModal.file && (
+                      <span className="file-hint">
+                        {addModal.file.name} ({(addModal.file.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    )}
+                  </label>
+                  {addModal.error && <p className="banner error">{addModal.error}</p>}
+                  <button type="submit" className="add-btn" disabled={addModal.saving}>
+                    {addModal.saving ? "Subiendo…" : "Guardar y subir"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {preview && (
@@ -734,6 +841,27 @@ export default function Home() {
           font-size: 13px; padding: 0 2px;
         }
         .date-range-clear:hover { color: var(--accent); }
+        .add-btn {
+          border: none; background: var(--accent-2); color: #3a2400; font-weight: 700;
+          padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;
+          white-space: nowrap;
+        }
+        .add-btn:hover { background: var(--accent-2-strong); }
+        .add-btn:disabled { opacity: 0.6; cursor: default; }
+        .add-form { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+        .add-form-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted); }
+        .add-form-field input, .add-form-field select {
+          background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+          border-radius: 8px; padding: 8px 10px; font-size: 13px; color-scheme: dark;
+        }
+        .add-form-field input[type="file"] { padding: 8px 6px; }
+        .file-hint { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+        .required-mark { color: var(--accent-2); }
+        .add-success { margin-top: 8px; color: var(--text); font-size: 14px; line-height: 1.5; }
+        .filename-chip {
+          display: inline-block; background: var(--surface-2); color: var(--accent);
+          padding: 4px 10px; border-radius: 6px; font-size: 13px; margin-top: 6px;
+        }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
         .card {
           background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
