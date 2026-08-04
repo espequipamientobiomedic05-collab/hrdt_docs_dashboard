@@ -5,9 +5,10 @@ const SOURCE_LABELS = {
   "Revisión avances": "Informes PRONIS",
   "Informes semanales RUHA": "Informes semanales RUHA",
   Reuniones_supervisión: "Reuniones supervisión",
-  CARTAS: "Cartas PRONIS-SUPERV",
+  CARTAS: "Env PRONIS PROYECTA",
   "Informes SDD": "Informes SDD",
   "Informes RANF_RANT": "Informes RAN",
+  "Cartas recibidas": "Recib PRONIS PROYECTA",
 };
 
 const TABS = [
@@ -86,7 +87,7 @@ const TABS = [
   },
   {
     key: "cartas",
-    label: "Cartas PRONIS-SUPERV",
+    label: "Env PRONIS PROYECTA",
     source: "CARTAS",
     tone: "coral",
     filters: [
@@ -104,6 +105,28 @@ const TABS = [
       { header: "Fecha", render: (item) => item.date },
       { header: "Nro Avance", render: (item) => item.number },
       { header: "Destinatario", render: (item) => item.client },
+    ],
+  },
+  {
+    key: "cartasRecibidas",
+    label: "Recib PRONIS PROYECTA",
+    source: "Cartas recibidas",
+    tone: "lime",
+    filters: [
+      { key: "number", label: "Avance", type: "select" },
+      { key: "date", label: "Fecha", type: "date" },
+    ],
+    addFields: [
+      { key: "code", label: "Código" },
+      { key: "date", label: "Fecha", type: "date", required: true },
+      { key: "client", label: "Remite" },
+      { key: "number", label: "Avance", required: true },
+    ],
+    columns: [
+      { header: "Código", render: (item) => item.code },
+      { header: "Fecha", render: (item) => item.date },
+      { header: "Remite", render: (item) => item.client },
+      { header: "Avance", render: (item) => item.number },
     ],
   },
   {
@@ -686,6 +709,7 @@ const STAT_TONES = {
   coral: { bg: "#fdece9", border: "#f5b8ac", text: "#c1442a" },
   indigo: { bg: "#e8eafd", border: "#c3c9f7", text: "#4338ca" },
   rose: { bg: "#fde8f1", border: "#f5b8d4", text: "#be185d" },
+  lime: { bg: "#f7fee7", border: "#d9f99d", text: "#4d7c0f" },
 };
 
 function Stat({ label, value, tone = "celeste" }) {
