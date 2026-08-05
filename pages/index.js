@@ -418,6 +418,7 @@ export default function Home() {
                       {activeTab.columns.map((col) => (
                         <th key={col.header}>{col.header}</th>
                       ))}
+                      <th>Temas</th>
                       <th>Archivo</th>
                     </tr>
                   </thead>
@@ -427,6 +428,17 @@ export default function Home() {
                         {activeTab.columns.map((col) => (
                           <td key={col.header}>{col.render(item, { openAnnexes })}</td>
                         ))}
+                        <td className="topics-cell">
+                          {item.topics && item.topics.length ? (
+                            item.topics.map((topic) => (
+                              <span key={topic} className="topic-chip">
+                                {topic}
+                              </span>
+                            ))
+                          ) : (
+                            "—"
+                          )}
+                        </td>
                         <td className="archivo-cell">
                           {item.previewUrl ? (
                             <button
@@ -674,6 +686,12 @@ export default function Home() {
         .link-btn { border: none; background: none; color: #175a8c; font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; }
         .link-btn:hover { color: var(--accent-2-strong); }
         .archivo-cell { text-align: center; }
+        .topics-cell { max-width: 220px; }
+        .topic-chip {
+          display: inline-block; background: rgba(94, 200, 242, 0.14); color: #175a8c;
+          font-size: 11px; padding: 2px 8px; border-radius: 999px; margin: 2px 4px 2px 0;
+          white-space: nowrap;
+        }
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
         .eye-link:hover { color: var(--accent-2-strong); }
         tr:last-child td { border-bottom: none; }
