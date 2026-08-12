@@ -178,6 +178,12 @@ const TABS = [
       },
     ],
   },
+  {
+    key: "hilos",
+    label: "Hilos de documentos",
+    tone: "sky",
+    isThreadView: true,
+  },
 ];
 
 // Convierte "31/07/2026" (formato de Google Sheets) a "2026-07-31" (formato
@@ -187,6 +193,22 @@ function toIsoDate(value) {
   if (!match) return "";
   const [, d, m, y] = match;
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+// Extrae el número de avance de un documento. Prioriza el campo "number"
+// (ya viene directo de la hoja para cartas enviadas/recibidas) y, si no
+// existe, busca el patrón "AV_<número>" en el código o el título (usado por
+// los informes PROYECTA). Normaliza ceros a la izquierda para que "AV_001"
+// y "AV_1" se agrupen en el mismo hilo.
+function extractAvanceNumber(item) {
+  if (item.number) {
+    const digits = String(item.number).match(/\d+/);
+    if (digits) return String(parseInt(digits[0], 10));
+  }
+  const source = `${item.code || ""} ${item.title || ""}`;
+  const match = source.match(/AV[_\s-]?(\d+)/i);
+  if (match) return String(parseInt(match[1], 10));
+  return null;
 }
 
 function EyeIcon() {
@@ -203,6 +225,48 @@ function EyeIcon() {
   );
 }
 
+// Una etapa del hilo (carta enviada, informe o carta recibida). Puede tener
+// más de un documento si hay varios informes para el mismo avance.
+function ThreadStage({ title, items, emptyLabel, openAnnexes, setPreview }) {
+  return (
+    <div className="thread-stage">
+      <div className="thread-stage-title">{title}</div>
+      {items.length === 0 && <div className="thread-empty">{emptyLabel}</div>}
+      {items.map((item) => (
+        <div className="thread-doc" key={item.id}>
+          <div className="thread-doc-title">{item.title || item.code}</div>
+          <div className="thread-doc-date">
+            {item.date || item.cutoffDate || "Sin fecha"}
+          </div>
+          <div className="thread-doc-actions">
+            {item.previewUrl && (
+              <button
+                type="button"
+                className="eye-link"
+                title="Ver documento"
+                onClick={() =>
+                  setPreview({ title: item.title || item.code, url: item.previewUrl })
+                }
+              >
+                <EyeIcon />
+              </button>
+            )}
+            {item.annexId && (
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => openAnnexes(item)}
+              >
+                Ver anexos
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -213,6 +277,7 @@ export default function Home() {
   const [dateRanges, setDateRanges] = useState({});
   const [annexModal, setAnnexModal] = useState(null); // {title, files, loading, error}
   const [preview, setPreview] = useState(null); // {title, url}
+  const [selectedThread, setSelectedThread] = useState("");
 
   useEffect(() => {
     loadDashboard();
@@ -300,6 +365,39 @@ export default function Home() {
     });
   }, [sourceItems, query, filterValues, dateRanges, activeTab]);
 
+  // Agrupa cartas enviadas, informes PROYECTA y cartas recibidas que
+  // comparten el mismo número de avance, para armar el hilo de seguimiento.
+  const THREAD_ROLE_BY_SOURCE = {
+    "CARTAS": "enviada",
+    "Revisión avances": "informe",
+    "Cartas recibidas": "recibida",
+  };
+  const threads = useMemo(() => {
+    if (!data) return [];
+    const byAvance = {};
+    data.items.forEach((item) => {
+      const role = THREAD_ROLE_BY_SOURCE[item.source];
+      if (!role) return;
+      const avance = extractAvanceNumber(item);
+      if (!avance) return;
+      if (!byAvance[avance]) {
+        byAvance[avance] = { avance, enviada: [], informe: [], recibida: [] };
+      }
+      byAvance[avance][role].push(item);
+    });
+    return Object.values(byAvance)
+      .filter((t) => t.enviada.length || t.informe.length || t.recibida.length)
+      .sort((a, b) => Number(b.avance) - Number(a.avance));
+  }, [data]);
+
+  useEffect(() => {
+    if (threads.length && !threads.some((t) => t.avance === selectedThread)) {
+      setSelectedThread(threads[0].avance);
+    }
+  }, [threads, selectedThread]);
+
+  const currentThread = threads.find((t) => t.avance === selectedThread) || null;
+
   return (
     <>
       <Head>
@@ -329,7 +427,12 @@ export default function Home() {
             <section className="stats">
               <Stat label="Documentos" value={data.stats.total} tone="celeste" />
               {TABS.map((t) => (
-                <Stat key={t.key} label={t.label} value={sourceCounts[t.key] || 0} tone={t.tone} />
+                <Stat
+                  key={t.key}
+                  label={t.label}
+                  value={t.isThreadView ? threads.length : sourceCounts[t.key] || 0}
+                  tone={t.tone}
+                />
               ))}
             </section>
 
@@ -345,126 +448,177 @@ export default function Home() {
               ))}
             </nav>
 
-            <section>
-              <div className="filters">
-                <input
-                  placeholder="Buscar por título, código, asunto…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-                {(activeTab.filters || []).map((f) =>
-                  f.type === "date" ? (
-                    <div className="date-range" key={f.key}>
-                      <span className="date-range-label">{f.label}</span>
-                      <input
-                        type="date"
-                        value={(dateRanges[f.key] && dateRanges[f.key].from) || ""}
-                        onChange={(e) =>
-                          setDateRanges((prev) => ({
-                            ...prev,
-                            [f.key]: { ...prev[f.key], from: e.target.value },
-                          }))
-                        }
-                      />
-                      <span className="date-range-sep">→</span>
-                      <input
-                        type="date"
-                        value={(dateRanges[f.key] && dateRanges[f.key].to) || ""}
-                        onChange={(e) =>
-                          setDateRanges((prev) => ({
-                            ...prev,
-                            [f.key]: { ...prev[f.key], to: e.target.value },
-                          }))
-                        }
-                      />
-                      {(dateRanges[f.key]?.from || dateRanges[f.key]?.to) && (
-                        <button
-                          type="button"
-                          className="date-range-clear"
-                          onClick={() =>
-                            setDateRanges((prev) => ({ ...prev, [f.key]: { from: "", to: "" } }))
-                          }
-                          title="Limpiar fechas"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <select
-                      key={f.key}
-                      value={filterValues[f.key] || "todas"}
-                      onChange={(e) =>
-                        setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))
-                      }
-                    >
-                      <option value="todas">{f.label}: todas</option>
-                      {(filterOptions[f.key] || []).map((value) => (
-                        <option key={value} value={value}>
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                  )
+            {tab === "hilos" ? (
+              <section>
+                <div className="filters">
+                  <select
+                    value={selectedThread}
+                    onChange={(e) => setSelectedThread(e.target.value)}
+                  >
+                    {threads.map((t) => (
+                      <option key={t.avance} value={t.avance}>
+                        Avance {t.avance}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {threads.length === 0 && (
+                  <p className="muted-onlight" style={{ padding: "12px 4px" }}>
+                    No se encontraron hilos de documentos. Revisa que las cartas
+                    e informes tengan un número de avance (por ejemplo
+                    "AV_001" en el código) o el campo Nro Avance en la hoja.
+                  </p>
                 )}
-              </div>
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      {activeTab.columns.map((col) => (
-                        <th key={col.header}>{col.header}</th>
-                      ))}
-                      {tab === "reuniones" && <th>Temas</th>}
-                      <th>Archivo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredItems.map((item) => (
-                      <tr key={item.id}>
-                        {activeTab.columns.map((col) => (
-                          <td key={col.header}>{col.render(item, { openAnnexes })}</td>
+                {currentThread && (
+                  <div className="thread-flow">
+                    <ThreadStage
+                      title="Carta enviada"
+                      items={currentThread.enviada}
+                      emptyLabel="Sin carta enviada registrada"
+                      openAnnexes={openAnnexes}
+                      setPreview={setPreview}
+                    />
+                    <div className="thread-arrow">→</div>
+                    <ThreadStage
+                      title="Informe PROYECTA"
+                      items={currentThread.informe}
+                      emptyLabel="Sin informe registrado"
+                      openAnnexes={openAnnexes}
+                      setPreview={setPreview}
+                    />
+                    <div className="thread-arrow">→</div>
+                    <ThreadStage
+                      title="Carta recibida"
+                      items={currentThread.recibida}
+                      emptyLabel="Sin carta recibida registrada"
+                      openAnnexes={openAnnexes}
+                      setPreview={setPreview}
+                    />
+                  </div>
+                )}
+              </section>
+            ) : (
+              <section>
+                <div className="filters">
+                  <input
+                    placeholder="Buscar por título, código, asunto…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                  {(activeTab.filters || []).map((f) =>
+                    f.type === "date" ? (
+                      <div className="date-range" key={f.key}>
+                        <span className="date-range-label">{f.label}</span>
+                        <input
+                          type="date"
+                          value={(dateRanges[f.key] && dateRanges[f.key].from) || ""}
+                          onChange={(e) =>
+                            setDateRanges((prev) => ({
+                              ...prev,
+                              [f.key]: { ...prev[f.key], from: e.target.value },
+                            }))
+                          }
+                        />
+                        <span className="date-range-sep">→</span>
+                        <input
+                          type="date"
+                          value={(dateRanges[f.key] && dateRanges[f.key].to) || ""}
+                          onChange={(e) =>
+                            setDateRanges((prev) => ({
+                              ...prev,
+                              [f.key]: { ...prev[f.key], to: e.target.value },
+                            }))
+                          }
+                        />
+                        {(dateRanges[f.key]?.from || dateRanges[f.key]?.to) && (
+                          <button
+                            type="button"
+                            className="date-range-clear"
+                            onClick={() =>
+                              setDateRanges((prev) => ({ ...prev, [f.key]: { from: "", to: "" } }))
+                            }
+                            title="Limpiar fechas"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <select
+                        key={f.key}
+                        value={filterValues[f.key] || "todas"}
+                        onChange={(e) =>
+                          setFilterValues((prev) => ({ ...prev, [f.key]: e.target.value }))
+                        }
+                      >
+                        <option value="todas">{f.label}: todas</option>
+                        {(filterOptions[f.key] || []).map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
                         ))}
-                        {tab === "reuniones" && (
-                          <td className="topics-cell">
-                            {item.topics && item.topics.length ? (
-                              item.topics.map((topic) => (
-                                <span key={topic} className="topic-chip">
-                                  {topic}
-                                </span>
-                              ))
+                      </select>
+                    )
+                  )}
+                </div>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        {activeTab.columns.map((col) => (
+                          <th key={col.header}>{col.header}</th>
+                        ))}
+                        {tab === "reuniones" && <th>Temas</th>}
+                        <th>Archivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredItems.map((item) => (
+                        <tr key={item.id}>
+                          {activeTab.columns.map((col) => (
+                            <td key={col.header}>{col.render(item, { openAnnexes })}</td>
+                          ))}
+                          {tab === "reuniones" && (
+                            <td className="topics-cell">
+                              {item.topics && item.topics.length ? (
+                                item.topics.map((topic) => (
+                                  <span key={topic} className="topic-chip">
+                                    {topic}
+                                  </span>
+                                ))
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          )}
+                          <td className="archivo-cell">
+                            {item.previewUrl ? (
+                              <button
+                                type="button"
+                                className="eye-link"
+                                title="Ver documento"
+                                onClick={() =>
+                                  setPreview({ title: item.title || item.code, url: item.previewUrl })
+                                }
+                              >
+                                <EyeIcon />
+                              </button>
                             ) : (
                               "—"
                             )}
                           </td>
-                        )}
-                        <td className="archivo-cell">
-                          {item.previewUrl ? (
-                            <button
-                              type="button"
-                              className="eye-link"
-                              title="Ver documento"
-                              onClick={() =>
-                                setPreview({ title: item.title || item.code, url: item.previewUrl })
-                              }
-                            >
-                              <EyeIcon />
-                            </button>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredItems.length === 0 && (
-                  <p className="muted-onlight" style={{ padding: "12px 4px" }}>
-                    No hay documentos que coincidan con el filtro.
-                  </p>
-                )}
-              </div>
-            </section>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredItems.length === 0 && (
+                    <p className="muted-onlight" style={{ padding: "12px 4px" }}>
+                      No hay documentos que coincidan con el filtro.
+                    </p>
+                  )}
+                </div>
+              </section>
+            )}
           </>
         )}
 
@@ -693,6 +847,34 @@ export default function Home() {
         }
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
         .eye-link:hover { color: var(--accent-2-strong); }
+        .thread-flow {
+          display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
+          margin-top: 8px;
+        }
+        .thread-stage {
+          flex: 1 1 220px; min-width: 220px; background: var(--surface);
+          border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+          display: flex; flex-direction: column; gap: 10px;
+        }
+        .thread-stage-title {
+          font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+          text-transform: uppercase; color: var(--accent);
+        }
+        .thread-doc {
+          background: var(--surface-2); border: 1px solid var(--border);
+          border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+        }
+        .thread-doc-title { font-size: 13px; color: var(--text); font-weight: 600; }
+        .thread-doc-date { font-size: 12px; color: var(--text-muted); }
+        .thread-doc-actions { display: flex; align-items: center; gap: 10px; }
+        .thread-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+        .thread-arrow {
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px; color: var(--accent); flex: 0 0 auto; padding: 0 2px;
+        }
+        @media (max-width: 720px) {
+          .thread-arrow { transform: rotate(90deg); }
+        }
         tr:last-child td { border-bottom: none; }
         .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
@@ -719,6 +901,7 @@ const STAT_TONES = {
   indigo: { bg: "#e8eafd", border: "#c3c9f7", text: "#4338ca" },
   rose: { bg: "#fde8f1", border: "#f5b8d4", text: "#be185d" },
   lime: { bg: "#f7fee7", border: "#d9f99d", text: "#4d7c0f" },
+  sky: { bg: "#e6f4ff", border: "#a8d8ff", text: "#0b5fa5" },
 };
 
 function Stat({ label, value, tone = "celeste" }) {
