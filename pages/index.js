@@ -418,7 +418,7 @@ export default function Home() {
                       {activeTab.columns.map((col) => (
                         <th key={col.header}>{col.header}</th>
                       ))}
-                      <th>Temas</th>
+                      {tab === "reuniones" && <th>Temas</th>}
                       <th>Archivo</th>
                     </tr>
                   </thead>
@@ -428,17 +428,19 @@ export default function Home() {
                         {activeTab.columns.map((col) => (
                           <td key={col.header}>{col.render(item, { openAnnexes })}</td>
                         ))}
-                        <td className="topics-cell">
-                          {item.topics && item.topics.length ? (
-                            item.topics.map((topic) => (
-                              <span key={topic} className="topic-chip">
-                                {topic}
-                              </span>
-                            ))
-                          ) : (
-                            "—"
-                          )}
-                        </td>
+                        {tab === "reuniones" && (
+                          <td className="topics-cell">
+                            {item.topics && item.topics.length ? (
+                              item.topics.map((topic) => (
+                                <span key={topic} className="topic-chip">
+                                  {topic}
+                                </span>
+                              ))
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        )}
                         <td className="archivo-cell">
                           {item.previewUrl ? (
                             <button
