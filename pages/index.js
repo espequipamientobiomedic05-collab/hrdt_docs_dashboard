@@ -17,12 +17,7 @@ const TABS = [
     label: "Informes PROYECTA",
     source: "Revisión avances",
     tone: "amber",
-    filters: [{ key: "cutoffDate", label: "Fecha emisión", type: "date" }],
-    addFields: [
-      { key: "code", label: "Código", required: true },
-      { key: "cutoffDate", label: "Fecha emisión", type: "date", required: true },
-      { key: "annexTitle", label: "Nombre de la carpeta de anexos (opcional)" },
-    ],
+    filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Documento", render: (item) => item.title },
@@ -44,10 +39,7 @@ const TABS = [
     label: "Enviado PROYECTA",
     source: "CARTAS",
     tone: "coral",
-    filters: [
-      { key: "number", label: "Nro Avance", type: "select" },
-      { key: "date", label: "Fecha", type: "date" },
-    ],
+    filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
     addFields: [
       { key: "code", label: "Código" },
       { key: "date", label: "Fecha", type: "date", required: true },
@@ -65,10 +57,7 @@ const TABS = [
     label: "Recibido PROYECTA",
     source: "Cartas recibidas",
     tone: "lime",
-    filters: [
-      { key: "number", label: "Avance", type: "select" },
-      { key: "date", label: "Fecha", type: "date" },
-    ],
+    filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
     addFields: [
       { key: "code", label: "Código" },
       { key: "date", label: "Fecha", type: "date", required: true },
@@ -295,7 +284,11 @@ export default function Home() {
       const res = await fetch("/api/dashboard");
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || "Error desconocido");
-      setData(json.data);
+      const items = json.data.items.map((item) => ({
+        ...item,
+        informeNumber: extractAvanceNumber(item),
+      }));
+      setData({ ...json.data, items });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -599,7 +592,7 @@ export default function Home() {
                         <option value="todas">{f.label}: todas</option>
                         {(filterOptions[f.key] || []).map((value) => (
                           <option key={value} value={value}>
-                            {value}
+                            {f.key === "informeNumber" ? `Informe: ${value}` : value}
                           </option>
                         ))}
                       </select>
