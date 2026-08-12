@@ -848,7 +848,7 @@ export default function Home() {
         .eye-link:hover { color: var(--accent-2-strong); }
         .thread-flow {
           display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
-          margin-top: 8px;
+          margin-top: 8px; color: #10233d;
         }
         .thread-stage {
           flex: 1 1 220px; min-width: 220px; background: #ffffff;
