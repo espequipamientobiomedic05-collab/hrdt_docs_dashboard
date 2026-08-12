@@ -426,11 +426,11 @@ export default function Home() {
           <>
             <section className="stats">
               <Stat label="Documentos" value={data.stats.total} tone="celeste" />
-              {TABS.map((t) => (
+              {TABS.filter((t) => !t.isThreadView).map((t) => (
                 <Stat
                   key={t.key}
                   label={t.label}
-                  value={t.isThreadView ? threads.length : sourceCounts[t.key] || 0}
+                  value={sourceCounts[t.key] || 0}
                   tone={t.tone}
                 />
               ))}
