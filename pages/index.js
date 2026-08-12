@@ -178,7 +178,7 @@ const TABS = [
   },
   {
     key: "hilos",
-    label: "Hilos de documentos",
+    label: "Hilos",
     tone: "sky",
     isThreadView: true,
   },
@@ -437,15 +437,20 @@ export default function Home() {
             </section>
 
             <nav className="tabs">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  className={tab === t.key ? "tab active" : "tab"}
-                  onClick={() => setTab(t.key)}
-                >
-                  {t.label}
-                </button>
-              ))}
+              {TABS.map((t) => {
+                const classes = ["tab"];
+                if (tab === t.key) classes.push("active");
+                if (t.isThreadView) classes.push("tab-highlight");
+                return (
+                  <button
+                    key={t.key}
+                    className={classes.join(" ")}
+                    onClick={() => setTab(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </nav>
 
             {tab === "hilos" ? (
@@ -780,7 +785,7 @@ export default function Home() {
         .preview-close:hover { background: var(--accent-strong); }
         .preview-frame { flex: 1; width: 100%; border: none; }
         .wrap {
-          max-width: 1100px;
+          max-width: 1320px;
           margin: 32px auto 60px;
           padding: 32px 32px 48px;
           background: #f5f7fa;
@@ -825,6 +830,17 @@ export default function Home() {
           color: var(--accent-ink);
           border: 2px solid var(--accent);
           font-weight: 700;
+        }
+        .tab.tab-highlight {
+          background: #ffc94d;
+          color: #4a3400;
+          font-weight: 700;
+          border: 1px solid #e0a740;
+        }
+        .tab.tab-highlight:hover { background: #ffbd26; }
+        .tab.tab-highlight.active {
+          background: #ffc94d;
+          border: 2px solid #b3771e;
         }
         .filters { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
         .filters input {
