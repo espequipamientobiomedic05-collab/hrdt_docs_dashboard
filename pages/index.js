@@ -25,7 +25,6 @@ const TABS = [
     ],
     columns: [
       { header: "Código", render: (item) => item.code },
-      { header: "Fecha emisión", render: (item) => item.cutoffDate },
       { header: "Documento", render: (item) => item.title },
       {
         header: "Anexos",
@@ -226,7 +225,7 @@ function EyeIcon() {
 
 // Una etapa del hilo (carta enviada, informe o carta recibida). Puede tener
 // más de un documento si hay varios informes para el mismo avance.
-function ThreadStage({ title, items, emptyLabel, openAnnexes, setPreview }) {
+function ThreadStage({ title, items, emptyLabel, openAnnexes, setPreview, hideDate }) {
   return (
     <div className="thread-stage">
       <div className="thread-stage-title">{title}</div>
@@ -234,9 +233,11 @@ function ThreadStage({ title, items, emptyLabel, openAnnexes, setPreview }) {
       {items.map((item) => (
         <div className="thread-doc" key={item.id}>
           <div className="thread-doc-title">{item.title || item.code}</div>
-          <div className="thread-doc-date">
-            {item.date || item.cutoffDate || "Sin fecha"}
-          </div>
+          {!hideDate && (
+            <div className="thread-doc-date">
+              {item.date || item.cutoffDate || "Sin fecha"}
+            </div>
+          )}
           <div className="thread-doc-actions">
             {item.previewUrl && (
               <button
@@ -490,6 +491,7 @@ export default function Home() {
                         emptyLabel="Sin informe registrado"
                         openAnnexes={openAnnexes}
                         setPreview={setPreview}
+                        hideDate
                       />
                       <ThreadStage
                         title="Carta recibida"
