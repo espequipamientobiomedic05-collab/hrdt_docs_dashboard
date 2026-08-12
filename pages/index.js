@@ -5,10 +5,10 @@ const SOURCE_LABELS = {
   "Revisión avances": "Informes PROYECTA",
   "Informes semanales RUHA": "Informes semanales RUHA",
   Reuniones_supervisión: "Reuniones supervisión",
-  CARTAS: "Env PRONIS PROYECTA",
+  CARTAS: "Enviado PROYECTA",
   "Informes SDD": "Informes SDD",
   "Informes RANF_RANT": "Informes RAN",
-  "Cartas recibidas": "Recib PRONIS PROYECTA",
+  "Cartas recibidas": "Recibido PROYECTA",
 };
 
 const TABS = [
@@ -84,7 +84,7 @@ const TABS = [
   },
   {
     key: "cartas",
-    label: "Env PRONIS PROYECTA",
+    label: "Enviado PROYECTA",
     source: "CARTAS",
     tone: "coral",
     filters: [
@@ -106,7 +106,7 @@ const TABS = [
   },
   {
     key: "cartasRecibidas",
-    label: "Recib PRONIS PROYECTA",
+    label: "Recibido PROYECTA",
     source: "Cartas recibidas",
     tone: "lime",
     filters: [
