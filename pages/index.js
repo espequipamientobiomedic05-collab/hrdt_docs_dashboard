@@ -851,25 +851,25 @@ export default function Home() {
           margin-top: 8px;
         }
         .thread-stage {
-          flex: 1 1 220px; min-width: 220px; background: var(--surface);
-          border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+          flex: 1 1 220px; min-width: 220px; background: #ffffff;
+          border: 1px solid #d8e0ea; border-radius: 12px; padding: 14px;
           display: flex; flex-direction: column; gap: 10px;
         }
         .thread-stage-title {
           font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
-          text-transform: uppercase; color: var(--accent);
+          text-transform: uppercase; color: #175a8c;
         }
         .thread-doc {
-          background: var(--surface-2); border: 1px solid var(--border);
+          background: #eef3fa; border: 1px solid #d8e0ea;
           border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
         }
-        .thread-doc-title { font-size: 13px; color: var(--text); font-weight: 600; }
-        .thread-doc-date { font-size: 12px; color: var(--text-muted); }
+        .thread-doc-title { font-size: 13px; color: #10233d; font-weight: 600; }
+        .thread-doc-date { font-size: 12px; color: #55708c; }
         .thread-doc-actions { display: flex; align-items: center; gap: 10px; }
-        .thread-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+        .thread-empty { font-size: 12px; color: #8ea3c4; font-style: italic; }
         .thread-arrow {
           display: flex; align-items: center; justify-content: center;
-          font-size: 22px; color: var(--accent); flex: 0 0 auto; padding: 0 2px;
+          font-size: 22px; color: #175a8c; flex: 0 0 auto; padding: 0 2px;
         }
         @media (max-width: 720px) {
           .thread-arrow { transform: rotate(90deg); }
