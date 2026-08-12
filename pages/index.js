@@ -480,9 +480,42 @@ export default function Home() {
                         setPreview={setPreview}
                       />
                     </div>
-                    <div className="thread-branch-connectors">
-                      <div className="thread-branch-arrow thread-branch-arrow-up">↗</div>
-                      <div className="thread-branch-arrow thread-branch-arrow-down">↘</div>
+                    <div className="thread-branch-connectors" aria-hidden="true">
+                      <svg
+                        className="thread-branch-svg"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                      >
+                        <defs>
+                          <marker
+                            id="threadArrowHead"
+                            viewBox="0 0 10 10"
+                            refX="7"
+                            refY="5"
+                            markerWidth="6"
+                            markerHeight="6"
+                            orient="auto-start-reverse"
+                          >
+                            <path d="M0,0 L10,5 L0,10 z" fill="#175a8c" />
+                          </marker>
+                        </defs>
+                        <path
+                          d="M0,50 L40,50 L40,25 L97,25"
+                          fill="none"
+                          stroke="#175a8c"
+                          strokeWidth="2"
+                          vectorEffect="non-scaling-stroke"
+                          markerEnd="url(#threadArrowHead)"
+                        />
+                        <path
+                          d="M0,50 L40,50 L40,75 L97,75"
+                          fill="none"
+                          stroke="#175a8c"
+                          strokeWidth="2"
+                          vectorEffect="non-scaling-stroke"
+                          markerEnd="url(#threadArrowHead)"
+                        />
+                      </svg>
                     </div>
                     <div className="thread-branch-targets">
                       <ThreadStage
@@ -855,23 +888,25 @@ export default function Home() {
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
         .eye-link:hover { color: var(--accent-2-strong); }
         .thread-branch {
-          display: flex; align-items: center; gap: 14px; margin-top: 10px;
+          display: flex; align-items: stretch; gap: 0; margin-top: 10px;
           flex-wrap: wrap; color: #10233d;
         }
-        .thread-branch-source { flex: 0 0 240px; align-self: center; }
-        .thread-branch-connectors {
-          display: flex; flex-direction: column; justify-content: space-between;
-          align-self: stretch; padding: 10px 0; flex: 0 0 auto;
+        .thread-branch-source {
+          flex: 0 0 240px; display: flex; align-items: center; margin-right: 6px;
         }
-        .thread-branch-arrow { font-size: 22px; color: #175a8c; line-height: 1; }
+        .thread-branch-connectors {
+          position: relative; flex: 0 0 70px; min-height: 120px;
+        }
+        .thread-branch-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
         .thread-branch-targets {
-          display: flex; flex-direction: column; gap: 14px; flex: 1 1 260px; min-width: 240px;
+          display: flex; flex-direction: column; gap: 14px; flex: 1 1 260px;
+          min-width: 240px; margin-left: 6px;
         }
         @media (max-width: 720px) {
           .thread-branch { flex-direction: column; align-items: stretch; }
-          .thread-branch-source { flex-basis: auto; }
-          .thread-branch-connectors { flex-direction: row; justify-content: center; padding: 4px 0; }
-          .thread-branch-arrow-up, .thread-branch-arrow-down { transform: rotate(90deg); }
+          .thread-branch-source { flex-basis: auto; margin-right: 0; margin-bottom: 8px; }
+          .thread-branch-connectors { display: none; }
+          .thread-branch-targets { margin-left: 0; }
         }
         .thread-stage {
           flex: 1 1 220px; min-width: 220px; background: #ffffff;
