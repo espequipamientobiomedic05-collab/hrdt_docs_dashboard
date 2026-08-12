@@ -101,7 +101,6 @@ const TABS = [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha", render: (item) => item.date },
       { header: "Nro Avance", render: (item) => item.number },
-      { header: "Destinatario", render: (item) => item.client },
     ],
   },
   {
