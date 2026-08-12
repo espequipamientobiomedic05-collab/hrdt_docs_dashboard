@@ -685,11 +685,11 @@ export default function Home() {
         .link-btn { border: none; background: none; color: #175a8c; font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; }
         .link-btn:hover { color: var(--accent-2-strong); }
         .archivo-cell { text-align: center; }
-        .topics-cell { max-width: 220px; }
+        .topics-cell { max-width: 320px; }
         .topic-chip {
-          display: inline-block; background: rgba(94, 200, 242, 0.14); color: #175a8c;
-          font-size: 11px; padding: 2px 8px; border-radius: 999px; margin: 2px 4px 2px 0;
-          white-space: nowrap;
+          display: block; background: rgba(94, 200, 242, 0.14); color: #175a8c;
+          font-size: 11px; padding: 2px 8px; border-radius: 999px; margin: 0 0 4px 0;
+          white-space: normal; width: fit-content;
         }
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
         .eye-link:hover { color: var(--accent-2-strong); }
