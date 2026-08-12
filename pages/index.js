@@ -469,30 +469,36 @@ export default function Home() {
                   </p>
                 )}
                 {currentThread && (
-                  <div className="thread-flow">
-                    <ThreadStage
-                      title="Carta enviada"
-                      items={currentThread.enviada}
-                      emptyLabel="Sin carta enviada registrada"
-                      openAnnexes={openAnnexes}
-                      setPreview={setPreview}
-                    />
-                    <div className="thread-arrow">→</div>
-                    <ThreadStage
-                      title="Informe PROYECTA"
-                      items={currentThread.informe}
-                      emptyLabel="Sin informe registrado"
-                      openAnnexes={openAnnexes}
-                      setPreview={setPreview}
-                    />
-                    <div className="thread-arrow">→</div>
-                    <ThreadStage
-                      title="Carta recibida"
-                      items={currentThread.recibida}
-                      emptyLabel="Sin carta recibida registrada"
-                      openAnnexes={openAnnexes}
-                      setPreview={setPreview}
-                    />
+                  <div className="thread-branch">
+                    <div className="thread-branch-source">
+                      <ThreadStage
+                        title="Carta enviada"
+                        items={currentThread.enviada}
+                        emptyLabel="Sin carta enviada registrada"
+                        openAnnexes={openAnnexes}
+                        setPreview={setPreview}
+                      />
+                    </div>
+                    <div className="thread-branch-connectors">
+                      <div className="thread-branch-arrow thread-branch-arrow-up">↗</div>
+                      <div className="thread-branch-arrow thread-branch-arrow-down">↘</div>
+                    </div>
+                    <div className="thread-branch-targets">
+                      <ThreadStage
+                        title="Informe PROYECTA"
+                        items={currentThread.informe}
+                        emptyLabel="Sin informe registrado"
+                        openAnnexes={openAnnexes}
+                        setPreview={setPreview}
+                      />
+                      <ThreadStage
+                        title="Carta recibida"
+                        items={currentThread.recibida}
+                        emptyLabel="Sin carta recibida registrada"
+                        openAnnexes={openAnnexes}
+                        setPreview={setPreview}
+                      />
+                    </div>
                   </div>
                 )}
               </section>
@@ -846,13 +852,29 @@ export default function Home() {
         }
         .eye-link { display: inline-flex; align-items: center; justify-content: center; color: #175a8c; }
         .eye-link:hover { color: var(--accent-2-strong); }
-        .thread-flow {
-          display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap;
-          margin-top: 8px; color: #10233d;
+        .thread-branch {
+          display: flex; align-items: center; gap: 14px; margin-top: 10px;
+          flex-wrap: wrap; color: #10233d;
+        }
+        .thread-branch-source { flex: 0 0 240px; align-self: center; }
+        .thread-branch-connectors {
+          display: flex; flex-direction: column; justify-content: space-between;
+          align-self: stretch; padding: 10px 0; flex: 0 0 auto;
+        }
+        .thread-branch-arrow { font-size: 22px; color: #175a8c; line-height: 1; }
+        .thread-branch-targets {
+          display: flex; flex-direction: column; gap: 14px; flex: 1 1 260px; min-width: 240px;
+        }
+        @media (max-width: 720px) {
+          .thread-branch { flex-direction: column; align-items: stretch; }
+          .thread-branch-source { flex-basis: auto; }
+          .thread-branch-connectors { flex-direction: row; justify-content: center; padding: 4px 0; }
+          .thread-branch-arrow-up, .thread-branch-arrow-down { transform: rotate(90deg); }
         }
         .thread-stage {
           flex: 1 1 220px; min-width: 220px; background: #ffffff;
-          border: 1px solid #d8e0ea; border-radius: 12px; padding: 14px;
+          border: 1px solid #c7d3e2; border-radius: 12px; padding: 14px;
+          box-shadow: 0 2px 8px rgba(16, 35, 61, 0.07);
           display: flex; flex-direction: column; gap: 10px;
         }
         .thread-stage-title {
@@ -860,20 +882,13 @@ export default function Home() {
           text-transform: uppercase; color: #175a8c;
         }
         .thread-doc {
-          background: #eef3fa; border: 1px solid #d8e0ea;
+          background: #f3f7fc; border: 1px solid #dbe4f0;
           border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
         }
         .thread-doc-title { font-size: 13px; color: #10233d; font-weight: 600; }
         .thread-doc-date { font-size: 12px; color: #55708c; }
         .thread-doc-actions { display: flex; align-items: center; gap: 10px; }
         .thread-empty { font-size: 12px; color: #8ea3c4; font-style: italic; }
-        .thread-arrow {
-          display: flex; align-items: center; justify-content: center;
-          font-size: 22px; color: #175a8c; flex: 0 0 auto; padding: 0 2px;
-        }
-        @media (max-width: 720px) {
-          .thread-arrow { transform: rotate(90deg); }
-        }
         tr:last-child td { border-bottom: none; }
         .modal-backdrop { position: fixed; inset: 0; background: rgba(3, 10, 22, 0.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-width: 480px; width: 100%; max-height: 80vh; overflow: auto; padding: 20px; }
