@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 
 const SOURCE_LABELS = {
-  "Revisión avances": "Informes PRONIS",
+  "Revisión avances": "Informes PROYECTA",
   "Informes semanales RUHA": "Informes semanales RUHA",
   Reuniones_supervisión: "Reuniones supervisión",
   CARTAS: "Env PRONIS PROYECTA",
@@ -14,7 +14,7 @@ const SOURCE_LABELS = {
 const TABS = [
   {
     key: "avances",
-    label: "Informes PRONIS",
+    label: "Informes PROYECTA",
     source: "Revisión avances",
     tone: "amber",
     filters: [{ key: "cutoffDate", label: "Fecha emisión", type: "date" }],
