@@ -20,6 +20,7 @@ const TABS = [
     filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
     columns: [
       { header: "Código", render: (item) => item.code },
+      { header: "Fecha emisión", render: (item) => item.date },
       { header: "Documento", render: (item) => item.title },
       {
         header: "Anexos",
@@ -49,7 +50,9 @@ const TABS = [
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha", render: (item) => item.date },
+      { header: "Documento", render: (item) => item.title },
       { header: "Nro Avance", render: (item) => item.number },
+      { header: "Destinatario", render: (item) => item.client },
     ],
   },
   {
@@ -67,6 +70,7 @@ const TABS = [
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha", render: (item) => item.date },
+      { header: "Documento", render: (item) => item.title },
       { header: "Remite", render: (item) => item.client },
       { header: "Avance", render: (item) => item.number },
     ],
@@ -90,7 +94,11 @@ const TABS = [
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha reunión", render: (item) => item.date },
+      { header: "Acta", render: (item) => item.acta },
       { header: "Asunto", render: (item) => item.subject },
+      { header: "Cliente", render: (item) => item.client },
+      { header: "Contratista", render: (item) => item.contractor },
+      { header: "Supervisión", render: (item) => item.supervision },
       { header: "Estado proyecto", render: (item) => item.projectState },
       { header: "Revisado", render: (item) => item.reviewed },
     ],
@@ -109,6 +117,7 @@ const TABS = [
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Corte", render: (item) => item.cutoffDate },
+      { header: "Fecha emisión", render: (item) => item.date },
       { header: "Semana", render: (item) => item.week },
       { header: "Documento", render: (item) => item.title },
     ],
@@ -152,6 +161,7 @@ const TABS = [
       { header: "Tipo", render: (item) => item.docType },
       { header: "Informe", render: (item) => item.number },
       { header: "Fecha", render: (item) => item.date },
+      { header: "Documento", render: (item) => item.title },
       {
         header: "Anexos",
         render: (item, ctx) =>
