@@ -42,19 +42,30 @@ const TABS = [
     label: "Cartas enviadas",
     source: "CARTAS",
     tone: "coral",
-    filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
+    filters: [{ key: "date", label: "Fecha emisión", type: "date" }],
     addFields: [
       { key: "code", label: "Código" },
-      { key: "date", label: "Fecha", type: "date", required: true },
-      { key: "number", label: "Nro Avance", required: true },
+      { key: "date", label: "Fecha emisión", type: "date", required: true },
       { key: "client", label: "Destinatario" },
+      { key: "subject", label: "Tema" },
     ],
     columns: [
       { header: "Código", render: (item) => item.code },
-      { header: "Fecha", render: (item) => item.date },
+      { header: "Fecha emisión", render: (item) => item.date },
       { header: "Documento", render: (item) => item.title },
-      { header: "Nro Avance", render: (item) => item.number },
       { header: "Destinatario", render: (item) => item.client },
+      { header: "Tema", render: (item) => item.subject },
+      {
+        header: "Anexos",
+        render: (item, ctx) =>
+          item.annexId ? (
+            <button className="link-btn" onClick={() => ctx.openAnnexes(item)}>
+              Ver anexos
+            </button>
+          ) : (
+            "—"
+          ),
+      },
     ],
   },
   {
@@ -62,19 +73,30 @@ const TABS = [
     label: "Cartas recibidas",
     source: "Cartas recibidas",
     tone: "lime",
-    filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
+    filters: [{ key: "date", label: "Fecha recepción", type: "date" }],
     addFields: [
       { key: "code", label: "Código" },
-      { key: "date", label: "Fecha", type: "date", required: true },
+      { key: "date", label: "Fecha recepción", type: "date", required: true },
       { key: "client", label: "Remite" },
-      { key: "number", label: "Avance", required: true },
+      { key: "subject", label: "Tema" },
     ],
     columns: [
       { header: "Código", render: (item) => item.code },
-      { header: "Fecha", render: (item) => item.date },
+      { header: "Fecha recepción", render: (item) => item.date },
       { header: "Documento", render: (item) => item.title },
       { header: "Remite", render: (item) => item.client },
-      { header: "Avance", render: (item) => item.number },
+      { header: "Tema", render: (item) => item.subject },
+      {
+        header: "Anexos",
+        render: (item, ctx) =>
+          item.annexId ? (
+            <button className="link-btn" onClick={() => ctx.openAnnexes(item)}>
+              Ver anexos
+            </button>
+          ) : (
+            "—"
+          ),
+      },
     ],
   },
   {
@@ -96,7 +118,6 @@ const TABS = [
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha reunión", render: (item) => item.date },
-      { header: "Acta", render: (item) => item.acta },
       { header: "Asunto", render: (item) => item.subject },
       { header: "Cliente", render: (item) => item.client },
       { header: "Contratista", render: (item) => item.contractor },
@@ -140,6 +161,26 @@ const TABS = [
       { header: "Semana", render: (item) => item.week },
       { header: "Corte", render: (item) => item.cutoffDate },
       { header: "Documento", render: (item) => item.title },
+      {
+        header: "Matriz",
+        render: (item, ctx) =>
+          item.matrixPreviewUrl ? (
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() =>
+                ctx.setPreview({
+                  title: item.matrixTitle || "Matriz",
+                  url: item.matrixPreviewUrl,
+                })
+              }
+            >
+              {item.matrixTitle || "Ver matriz"}
+            </button>
+          ) : (
+            "—"
+          ),
+      },
     ],
   },
   {
@@ -149,20 +190,20 @@ const TABS = [
     tone: "rose",
     filters: [
       { key: "docType", label: "Tipo", type: "select" },
-      { key: "number", label: "Informe", type: "select" },
+      { key: "client", label: "Emite", type: "select" },
     ],
     addFields: [
       { key: "code", label: "Código", required: true },
       { key: "docType", label: "Tipo", required: true },
-      { key: "number", label: "Informe", required: true },
-      { key: "date", label: "Fecha", type: "date", required: true },
+      { key: "date", label: "Fecha emisión", type: "date", required: true },
+      { key: "client", label: "Emite", required: true },
       { key: "annexTitle", label: "Nombre de la carpeta de anexos (opcional)" },
     ],
     columns: [
       { header: "Código", render: (item) => item.code },
       { header: "Tipo", render: (item) => item.docType },
-      { header: "Informe", render: (item) => item.number },
-      { header: "Fecha", render: (item) => item.date },
+      { header: "Fecha emisión", render: (item) => item.date },
+      { header: "Emite", render: (item) => item.client },
       { header: "Documento", render: (item) => item.title },
       {
         header: "Anexos",
@@ -626,7 +667,7 @@ export default function Home() {
                       {filteredItems.map((item) => (
                         <tr key={item.id}>
                           {activeTab.columns.map((col) => (
-                            <td key={col.header}>{col.render(item, { openAnnexes })}</td>
+                            <td key={col.header}>{col.render(item, { openAnnexes, setPreview })}</td>
                           ))}
                           {tab === "reuniones" && (
                             <td className="topics-cell">
