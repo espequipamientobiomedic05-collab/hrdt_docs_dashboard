@@ -392,7 +392,7 @@ export default function Home() {
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return sourceItems.filter((item) => {
+    const filtered = sourceItems.filter((item) => {
       const matchesQuery = !q || (item.searchText || "").includes(q);
       const matchesFilters = (activeTab.filters || []).every((f) => {
         if (f.type === "date") {
@@ -409,6 +409,19 @@ export default function Home() {
       });
       return matchesQuery && matchesFilters;
     });
+    // "Informes avances SDD" se ordena por fecha de corte, más reciente
+    // primero. Los ítems sin fecha válida quedan al final.
+    if (activeTab.key === "sdd") {
+      return [...filtered].sort((a, b) => {
+        const isoA = toIsoDate(a.cutoffDate) || toIsoDate(a.date);
+        const isoB = toIsoDate(b.cutoffDate) || toIsoDate(b.date);
+        if (!isoA && !isoB) return 0;
+        if (!isoA) return 1;
+        if (!isoB) return -1;
+        return isoB.localeCompare(isoA);
+      });
+    }
+    return filtered;
   }, [sourceItems, query, filterValues, dateRanges, activeTab]);
 
   // Agrupa cartas enviadas, informes PROYECTA y cartas recibidas que
