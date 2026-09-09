@@ -22,6 +22,8 @@ const TABS = [
       { header: "Código", render: (item) => item.code },
       { header: "Fecha emisión", render: (item) => item.date },
       { header: "Documento", render: (item) => item.title },
+      { header: "Remite", render: (item) => item.client },
+      { header: "Tema", render: (item) => item.subject },
       {
         header: "Anexos",
         render: (item, ctx) =>
