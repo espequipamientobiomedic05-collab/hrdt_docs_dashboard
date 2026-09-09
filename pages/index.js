@@ -2,19 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 
 const SOURCE_LABELS = {
-  "Revisión avances": "Informes PROYECTA",
+  "Revisión avances": "Informes PROYECTA_SDD",
   "Informes semanales RUHA": "Informes semanales RUHA",
-  Reuniones_supervisión: "Reuniones supervisión",
-  CARTAS: "Enviado PROYECTA",
-  "Informes SDD": "Informes SDD",
-  "Informes RANF_RANT": "Informes RAN",
-  "Cartas recibidas": "Recibido PROYECTA",
+  Reuniones_supervisión: "Actas reuniones supervisión",
+  CARTAS: "Cartas enviadas",
+  "Informes SDD": "Informes avances SDD",
+  "Informes RANF_RANT": "RANF/RANT",
+  "Cartas recibidas": "Cartas recibidas",
 };
 
 const TABS = [
   {
     key: "avances",
-    label: "Informes PROYECTA",
+    label: "Informes PROYECTA_SDD",
     source: "Revisión avances",
     tone: "amber",
     filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
@@ -36,7 +36,7 @@ const TABS = [
   },
   {
     key: "cartas",
-    label: "Enviado PROYECTA",
+    label: "Cartas enviadas",
     source: "CARTAS",
     tone: "coral",
     filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
@@ -54,7 +54,7 @@ const TABS = [
   },
   {
     key: "cartasRecibidas",
-    label: "Recibido PROYECTA",
+    label: "Cartas recibidas",
     source: "Cartas recibidas",
     tone: "lime",
     filters: [{ key: "informeNumber", label: "Informe", type: "select" }],
@@ -73,7 +73,7 @@ const TABS = [
   },
   {
     key: "reuniones",
-    label: "Reuniones supervisión",
+    label: "Actas reuniones supervisión",
     source: "Reuniones_supervisión",
     tone: "violet",
     filters: [{ key: "date", label: "Fecha reunión", type: "date" }],
@@ -115,7 +115,7 @@ const TABS = [
   },
   {
     key: "sdd",
-    label: "Informes SDD",
+    label: "Informes avances SDD",
     source: "Informes SDD",
     tone: "indigo",
     filters: [{ key: "cutoffDate", label: "Corte", type: "date" }],
@@ -133,7 +133,7 @@ const TABS = [
   },
   {
     key: "ran",
-    label: "Informes RAN",
+    label: "RANF/RANT",
     source: "Informes RANF_RANT",
     tone: "rose",
     filters: [
